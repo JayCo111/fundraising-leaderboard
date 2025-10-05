@@ -151,9 +151,9 @@ const FundraisingApp = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-cyan-100 via-blue-50 to-fuchsia-100 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-indigo-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-cyan-600 mx-auto mb-4"></div>
           <p className="text-lg font-semibold text-gray-700">Loading fundraising data...</p>
         </div>
       </div>
@@ -161,8 +161,8 @@ const FundraisingApp = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 shadow-lg">
+    <div className="min-h-screen bg-gradient-to-br from-cyan-100 via-blue-50 to-fuchsia-100">
+      <div className="bg-gradient-to-r from-cyan-400 via-blue-500 to-blue-600 text-white p-6 shadow-2xl shadow-cyan-500/50">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center gap-3 mb-4">
             <Trophy className="w-8 h-8" />
@@ -184,8 +184,8 @@ const FundraisingApp = () => {
             onClick={() => setActiveTab('mystats')}
             className={`flex-1 py-4 px-6 font-semibold transition-colors ${
               activeTab === 'mystats'
-                ? 'text-indigo-600 border-b-4 border-indigo-600'
-                : 'text-gray-600 hover:text-indigo-600'
+                ? 'text-cyan-600 border-b-4 border-cyan-500 bg-cyan-50 shadow-inner'
+                : 'text-gray-600 hover:text-cyan-500 hover:bg-cyan-50'
             }`}
           >
             My Stats
@@ -194,8 +194,8 @@ const FundraisingApp = () => {
             onClick={() => setActiveTab('myteam')}
             className={`flex-1 py-4 px-6 font-semibold transition-colors ${
               activeTab === 'myteam'
-                ? 'text-indigo-600 border-b-4 border-indigo-600'
-                : 'text-gray-600 hover:text-indigo-600'
+                ? 'text-cyan-600 border-b-4 border-cyan-500 bg-cyan-50 shadow-inner'
+                : 'text-gray-600 hover:text-cyan-500 hover:bg-cyan-50'
             }`}
           >
             My Team
@@ -204,8 +204,8 @@ const FundraisingApp = () => {
             onClick={() => setActiveTab('everyone')}
             className={`flex-1 py-4 px-6 font-semibold transition-colors ${
               activeTab === 'everyone'
-                ? 'text-indigo-600 border-b-4 border-indigo-600'
-                : 'text-gray-600 hover:text-indigo-600'
+                ? 'text-cyan-600 border-b-4 border-cyan-500 bg-cyan-50 shadow-inner'
+                : 'text-gray-600 hover:text-cyan-500 hover:bg-cyan-50'
             }`}
           >
             Everyone
@@ -216,7 +216,7 @@ const FundraisingApp = () => {
       <div className="max-w-6xl mx-auto p-6">
         {activeTab === 'mystats' && currentStudent && (
           <div className="space-y-6">
-            <div className="bg-white rounded-2xl shadow-lg p-8">
+            <div className="bg-white rounded-2xl shadow-2xl p-8">
               <div className="flex items-start justify-between mb-6">
                 <div>
                   <h2 className="text-3xl font-bold text-gray-900">{currentStudent.FullName}</h2>
@@ -230,13 +230,13 @@ const FundraisingApp = () => {
               <div className="mb-6">
                 <div className="flex justify-between text-sm mb-2">
                   <span className="font-semibold text-gray-700">Progress to Goal</span>
-                  <span className="font-bold text-indigo-600">
+                  <span className="font-bold text-cyan-600">
                     ${currentStudent.NetRaised} of ${currentStudent.Goal_$}
                   </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-6 overflow-hidden">
                   <div
-                    className="bg-gradient-to-r from-indigo-500 to-purple-500 h-full rounded-full transition-all duration-500 flex items-center justify-end pr-2"
+                    className="bg-gradient-to-r from-cyan-400 via-blue-500 to-blue-600 h-full rounded-full transition-all duration-500 flex items-center justify-end pr-3 shadow-lg shadow-cyan-500/50"
                     style={{ width: `${Math.min(currentStudent.ProgressPct * 100, 100)}%` }}
                   >
                     {currentStudent.ProgressPct > 0.1 && (
@@ -249,33 +249,33 @@ const FundraisingApp = () => {
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div className="bg-green-50 rounded-xl p-4 border-2 border-green-200">
+                <div className="bg-gradient-to-br from-emerald-400 to-green-500 rounded-2xl p-4 shadow-xl shadow-emerald-500/50 border-2 border-emerald-300 transform hover:scale-105 transition-transform">
                   <div className="flex items-center gap-2 mb-1">
-                    <DollarSign className="w-4 h-4 text-green-600" />
-                    <div className="text-xs font-semibold text-green-700">Raised</div>
+                    <DollarSign className="w-5 h-5 text-white drop-shadow-lg" />
+                    <div className="text-xs font-black text-white drop-shadow">Raised</div>
                   </div>
-                  <div className="text-2xl font-bold text-green-900">${currentStudent.NetRaised}</div>
+                  <div className="text-3xl font-black text-white drop-shadow-lg">${currentStudent.NetRaised}</div>
                 </div>
-                <div className="bg-blue-50 rounded-xl p-4 border-2 border-blue-200">
+                <div className="bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl p-4 shadow-xl shadow-blue-500/50 border-2 border-blue-300 transform hover:scale-105 transition-transform">
                   <div className="flex items-center gap-2 mb-1">
-                    <TrendingUp className="w-4 h-4 text-blue-600" />
-                    <div className="text-xs font-semibold text-blue-700">Cards Sold</div>
+                    <TrendingUp className="w-5 h-5 text-white drop-shadow-lg" />
+                    <div className="text-xs font-black text-white drop-shadow">Cards Sold</div>
                   </div>
-                  <div className="text-2xl font-bold text-blue-900">{currentStudent.CardsSold}</div>
+                  <div className="text-3xl font-black text-white drop-shadow-lg">{currentStudent.CardsSold}</div>
                 </div>
-                <div className="bg-purple-50 rounded-xl p-4 border-2 border-purple-200">
+                <div className="bg-gradient-to-br from-cyan-400 to-cyan-600 rounded-2xl p-4 shadow-xl shadow-cyan-500/50 border-2 border-cyan-300 transform hover:scale-105 transition-transform">
                   <div className="flex items-center gap-2 mb-1">
-                    <Users className="w-4 h-4 text-purple-600" />
-                    <div className="text-xs font-semibold text-purple-700">Team Rank</div>
+                    <Users className="w-4 h-4 text-blue-600" />
+                    <div className="text-xs font-semibold text-blue-700">Team Rank</div>
                   </div>
-                  <div className="text-2xl font-bold text-purple-900">#{currentStudent.TeamRank}</div>
+                  <div className="text-3xl font-black text-white drop-shadow-lg">#{currentStudent.TeamRank}</div>
                 </div>
-                <div className="bg-orange-50 rounded-xl p-4 border-2 border-orange-200">
+                <div className="bg-gradient-to-br from-orange-400 to-pink-500 rounded-2xl p-4 shadow-xl shadow-orange-500/50 border-2 border-orange-300 transform hover:scale-105 transition-transform">
                   <div className="flex items-center gap-2 mb-1">
-                    <Trophy className="w-4 h-4 text-orange-600" />
-                    <div className="text-xs font-semibold text-orange-700">Overall Rank</div>
+                    <Trophy className="w-5 h-5 text-white drop-shadow-lg" />
+                    <div className="text-xs font-black text-white drop-shadow">Overall Rank</div>
                   </div>
-                  <div className="text-2xl font-bold text-orange-900">
+                  <div className="text-3xl font-black text-white drop-shadow-lg">
                     {currentStudent.Medal || `#${currentStudent.OverallRank}`}
                   </div>
                 </div>
@@ -284,14 +284,14 @@ const FundraisingApp = () => {
               <div className="flex gap-3">
                 <button
                   onClick={copyLink}
-                  className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors"
+                  className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-black py-4 px-6 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-2xl shadow-cyan-500/50 border-2 border-cyan-300 transform hover:scale-105"
                 >
                   <Share2 className="w-5 h-5" />
                   Copy My Link
                 </button>
                 <button
                   onClick={() => setShowQR(!showQR)}
-                  className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors"
+                  className="flex-1 bg-gradient-to-r from-blue-500 to-fuchsia-600 hover:from-blue-600 hover:to-fuchsia-700 text-white font-black py-4 px-6 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-2xl shadow-fuchsia-500/50 border-2 border-fuchsia-300 transform hover:scale-105"
                 >
                   <QrCode className="w-5 h-5" />
                   Show My QR
@@ -305,12 +305,12 @@ const FundraisingApp = () => {
               )}
             </div>
 
-            <div className="bg-white rounded-2xl shadow-lg p-6">
+            <div className="bg-white rounded-2xl shadow-2xl p-6">
               <h3 className="text-xl font-bold text-gray-900 mb-4">My Orders</h3>
               <div className="space-y-3">
                 {currentStudent.Rel_Orders.length > 0 ? (
                   currentStudent.Rel_Orders.map(order => (
-                    <div key={order.OrderID} className="border border-gray-200 rounded-lg p-4 hover:border-indigo-300 transition-colors">
+                    <div key={order.OrderID} className="border border-gray-200 rounded-lg p-4 hover:border-cyan-300 transition-colors">
                       <div className="flex justify-between items-start mb-2">
                         <div className="font-semibold text-gray-900">{order.BuyerName}</div>
                         <div className="text-lg font-bold text-green-600">${order.TotalPaid}</div>
@@ -336,17 +336,17 @@ const FundraisingApp = () => {
         {activeTab === 'myteam' && currentStudent && (
           <div className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-white rounded-2xl shadow-lg p-6">
-                <div className="text-sm font-semibold text-gray-600 mb-2">Team Total Raised</div>
-                <div className="text-3xl font-bold text-indigo-600">${currentStudent.Team_Net}</div>
+              <div className="bg-gradient-to-br from-cyan-400 to-blue-500 rounded-2xl shadow-2xl shadow-cyan-500/50 p-6 border-2 border-cyan-300 transform hover:scale-105 transition-transform">
+                <div className="text-sm font-black text-white mb-2 drop-shadow">Team Total Raised</div>
+                <div className="text-4xl font-black text-white drop-shadow-lg">${currentStudent.Team_Net}</div>
               </div>
-              <div className="bg-white rounded-2xl shadow-lg p-6">
-                <div className="text-sm font-semibold text-gray-600 mb-2">Team Cards Sold</div>
-                <div className="text-3xl font-bold text-purple-600">{currentStudent.Team_Cards}</div>
+              <div className="bg-gradient-to-br from-blue-400 to-fuchsia-500 rounded-2xl shadow-2xl shadow-blue-500/50 p-6 border-2 border-blue-300 transform hover:scale-105 transition-transform">
+                <div className="text-sm font-black text-white mb-2 drop-shadow">Team Cards Sold</div>
+                <div className="text-4xl font-black text-white drop-shadow-lg">{currentStudent.Team_Cards}</div>
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-lg p-6">
+            <div className="bg-white rounded-2xl shadow-2xl p-6">
               <h3 className="text-xl font-bold text-gray-900 mb-4">Team: {currentStudent.Team}</h3>
               <div className="space-y-3">
                 {currentStudent.Rel_TeamMates.map((teammate) => (
@@ -354,8 +354,8 @@ const FundraisingApp = () => {
                     key={teammate.StudentID}
                     className={`border-2 rounded-lg p-4 transition-all ${
                       teammate.StudentID === currentStudent.StudentID
-                        ? 'border-indigo-400 bg-indigo-50'
-                        : 'border-gray-200 hover:border-indigo-300'
+                        ? 'border-cyan-400 bg-cyan-50'
+                        : 'border-gray-200 hover:border-cyan-300'
                     }`}
                   >
                     <div className="flex items-center gap-4">
@@ -384,17 +384,17 @@ const FundraisingApp = () => {
         {activeTab === 'everyone' && (
           <div className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-white rounded-2xl shadow-lg p-6">
-                <div className="text-sm font-semibold text-gray-600 mb-2">Total Raised</div>
-                <div className="text-3xl font-bold text-green-600">${totalRaised}</div>
+              <div className="bg-gradient-to-br from-emerald-400 to-green-600 rounded-2xl shadow-2xl shadow-emerald-500/50 p-6 border-2 border-emerald-300 transform hover:scale-105 transition-transform">
+                <div className="text-sm font-black text-white mb-2 drop-shadow">Total Raised</div>
+                <div className="text-4xl font-black text-white drop-shadow-lg">${totalRaised}</div>
               </div>
-              <div className="bg-white rounded-2xl shadow-lg p-6">
-                <div className="text-sm font-semibold text-gray-600 mb-2">Total Cards Sold</div>
-                <div className="text-3xl font-bold text-blue-600">{totalCards}</div>
+              <div className="bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl shadow-2xl shadow-blue-500/50 p-6 border-2 border-blue-300 transform hover:scale-105 transition-transform">
+                <div className="text-sm font-black text-white mb-2 drop-shadow">Total Cards Sold</div>
+                <div className="text-4xl font-black text-white drop-shadow-lg">{totalCards}</div>
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-lg p-6">
+            <div className="bg-white rounded-2xl shadow-2xl p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -403,7 +403,7 @@ const FundraisingApp = () => {
                     placeholder="Search by name..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
                   />
                 </div>
                 <div className="relative">
@@ -411,7 +411,7 @@ const FundraisingApp = () => {
                   <select
                     value={teamFilter}
                     onChange={(e) => setTeamFilter(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent appearance-none"
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent appearance-none"
                   >
                     <option value="">All Teams</option>
                     {teams.map(team => (
@@ -422,7 +422,7 @@ const FundraisingApp = () => {
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-lg p-6">
+            <div className="bg-white rounded-2xl shadow-2xl p-6">
               <h3 className="text-xl font-bold text-gray-900 mb-4">Overall Leaderboard</h3>
               <div className="space-y-3">
                 {filteredStudents.map((student) => (
@@ -431,11 +431,11 @@ const FundraisingApp = () => {
                     className={`border-2 rounded-lg p-4 transition-all ${
                       student.ProgressPct >= 1
                         ? 'border-green-400 bg-green-50'
-                        : 'border-gray-200 hover:border-indigo-300'
+                        : 'border-gray-200 hover:border-cyan-300'
                     }`}
                   >
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 flex items-center justify-center bg-indigo-100 rounded-full font-bold text-indigo-600">
+                      <div className="w-12 h-12 flex items-center justify-center bg-cyan-100 rounded-full font-bold text-cyan-600">
                         {student.Medal || `#${student.OverallRank}`}
                       </div>
                       {student.Avatar_URL && (
