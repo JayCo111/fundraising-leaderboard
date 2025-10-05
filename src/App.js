@@ -1,12 +1,19 @@
+/**
+ * Fundraising Leaderboard App
+ * 
+ * Main application component that displays fundraising statistics,
+ * team leaderboards, and individual student performance.
+ * 
+ * Features:
+ * - Real-time data from Google Sheets
+ * - Three views: My Stats, My Team, Everyone
+ * - Automatic ranking and calculations
+ * - Row-level privacy for parent access
+ */
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { Trophy, TrendingUp, Users, DollarSign, Share2, QrCode, Search, Filter, AlertCircle } from 'lucide-react';
-
-const GOOGLE_SHEETS_CONFIG = {
-  SHEET_ID: process.env.REACT_APP_GOOGLE_SHEET_ID,
-  API_KEY: process.env.REACT_APP_GOOGLE_API_KEY,
-  STUDENTS_RANGE: 'Students!A2:I1000',
-  ORDERS_RANGE: 'Orders!A2:I1000'
-};
+import { GOOGLE_SHEETS_CONFIG } from './config/googleSheets';
 
 const FundraisingApp = () => {
   const [studentsData, setStudentsData] = useState([]);
