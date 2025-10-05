@@ -12,12 +12,15 @@
  */
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Trophy, TrendingUp, Users, DollarSign, Share2, QrCode, Search, Filter, AlertCircle } from 'lucide-react';
+import { Trophy, TrendingUp, Users, DollarSign, Share2, QrCode, Search, Filter, AlertCircle, Target, UserPlus, CheckCircle, Phone, Mail, Building } from 'lucide-react';
 import { GOOGLE_SHEETS_CONFIG } from './config/googleSheets';
+import { saveReferral, validateReferralForm } from './utils/googleSheetsWrite';
 
 const FundraisingApp = () => {
   const [studentsData, setStudentsData] = useState([]);
   const [ordersData, setOrdersData] = useState([]);
+  const [referralsData, setReferralsData] = useState([]);
+  const [, setProgramsData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentUser] = useState('john.parent@example.com');
@@ -25,6 +28,21 @@ const FundraisingApp = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [teamFilter, setTeamFilter] = useState('');
   const [showQR, setShowQR] = useState(false);
+  const [programFilter, setProgramFilter] = useState('');
+  const [showReferralForm, setShowReferralForm] = useState(false);
+  
+  // Referral form state
+  const [referralFormData, setReferralFormData] = useState({
+    referralName: '',
+    referralEmail: '',
+    referralPhone: '',
+    organization: '',
+    stage: 'Contacted',
+    points: 0
+  });
+  const [referralFormErrors, setReferralFormErrors] = useState({});
+  const [isSavingReferral, setIsSavingReferral] = useState(false);
+  const [referralSaveMessage, setReferralSaveMessage] = useState('');
 
   useEffect(() => {
     const fetchSheetData = async () => {
@@ -43,6 +61,18 @@ const FundraisingApp = () => {
         );
         const ordersJson = await ordersResponse.json();
 
+        // Fetch Referrals
+const referralsResponse = await fetch(
+  `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEETS_CONFIG.SHEET_ID}/values/${GOOGLE_SHEETS_CONFIG.REFERRALS_RANGE}?key=${GOOGLE_SHEETS_CONFIG.API_KEY}`
+);
+const referralsJson = await referralsResponse.json();
+
+// Fetch Programs
+const programsResponse = await fetch(
+  `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEETS_CONFIG.SHEET_ID}/values/${GOOGLE_SHEETS_CONFIG.PROGRAMS_RANGE}?key=${GOOGLE_SHEETS_CONFIG.API_KEY}`
+);
+const programsJson = await programsResponse.json();
+
         if (studentsJson.values) {
           const students = studentsJson.values.map(row => ({
             StudentID: row[0] || '',
@@ -53,7 +83,8 @@ const FundraisingApp = () => {
             ParentEmail: row[5] || '',
             PersonalLink: row[6] || '',
             QR_URL: row[7] || '',
-            Avatar_URL: row[8] || ''
+            Avatar_URL: row[8] || '',
+            Program: row[9] || ''
           }));
           setStudentsData(students);
         }
@@ -71,6 +102,29 @@ const FundraisingApp = () => {
             Status: row[8] || 'Paid'
           }));
           setOrdersData(orders);
+        }
+        if (referralsJson.values) {
+          const referrals = referralsJson.values.map(row => ({
+            ReferralID: row[0] || '',
+            StudentID: row[1] || '',
+            ReferralName: row[2] || '',
+            ReferralEmail: row[3] || '',
+            ReferralPhone: row[4] || '',
+            Organization: row[5] || '',
+            Stage: row[6] || 'Contacted',
+            Points: parseFloat(row[7]) || 0,
+            DateAdded: row[8] || '',
+            LastUpdated: row[9] || ''
+          }));
+          setReferralsData(referrals);
+        }
+        
+        if (programsJson.values) {
+          const programs = programsJson.values.map(row => ({
+            Team: row[0] || '',
+            Program: row[1] || ''
+          }));
+          setProgramsData(programs);
         }
 
         setError(null);
@@ -92,17 +146,22 @@ const FundraisingApp = () => {
       const NetRaised = studentOrders.reduce((sum, o) => sum + (o.Status === 'Refunded' ? 0 : o.TotalPaid), 0);
       const ProgressPct = student.Goal_$ > 0 ? NetRaised / student.Goal_$ : 0;
       const FullName = `${student.FirstName} ${student.LastName}`;
+      const studentReferrals = referralsData.filter(r => r.StudentID === student.StudentID);
+      const ReferralPoints = studentReferrals.reduce((sum, r) => sum + r.Points, 0);
       
       return {
         ...student,
         FullName,
         CardsSold: NetQty,
         NetRaised,
+        ReferralPoints,
+        TotalRewards: NetRaised + ReferralPoints,
         ProgressPct,
-        Rel_Orders: studentOrders
+        Rel_Orders: studentOrders,
+        Rel_Referrals: studentReferrals
       };
     });
-  }, [studentsData, ordersData]);
+  }, [studentsData, ordersData, referralsData]);
 
   const rankedStudents = useMemo(() => {
     const sorted = [...enrichedStudents].sort((a, b) => b.NetRaised - a.NetRaised);
@@ -130,9 +189,61 @@ const FundraisingApp = () => {
       };
     });
   }, [rankedStudents]);
+  // Team vs Team Rankings
+const teamRankings = useMemo(() => {
+  const teamMap = new Map();
+  
+  studentsWithTeamStats.forEach(student => {
+    const key = `${student.Team}-${student.Program}`;
+    if (!teamMap.has(key)) {
+      teamMap.set(key, {
+        Team: student.Team,
+        Program: student.Program,
+        TotalRaised: 0,
+        TotalCards: 0,
+        MemberCount: 0
+      });
+    }
+    const team = teamMap.get(key);
+    team.TotalRaised += student.NetRaised;
+    team.TotalCards += student.CardsSold;
+    team.MemberCount += 1;
+  });
+
+  const teams = Array.from(teamMap.values()).sort((a, b) => b.TotalRaised - a.TotalRaised);
+  return teams.map((team, index) => ({
+    ...team,
+    Rank: index + 1,
+    Medal: index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : ''
+  }));
+}, [studentsWithTeamStats]);
+
+const referralRankings = useMemo(() => {
+  const studentReferralMap = new Map();
+  
+  studentsWithTeamStats.forEach(student => {
+    studentReferralMap.set(student.StudentID, {
+      StudentID: student.StudentID,
+      FullName: student.FullName,
+      Avatar_URL: student.Avatar_URL,
+      ReferralCount: student.Rel_Referrals.length,
+      ReferralPoints: student.ReferralPoints,
+      SignedUpCount: student.Rel_Referrals.filter(r => r.Stage === 'Signed Up').length
+    });
+  });
+
+  return Array.from(studentReferralMap.values())
+    .sort((a, b) => b.ReferralPoints - a.ReferralPoints)
+    .map((student, index) => ({
+      ...student,
+      Rank: index + 1,
+      Medal: index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : ''
+    }));
+}, [studentsWithTeamStats]);
 
   const currentStudent = studentsWithTeamStats.find(s => s.ParentEmail === currentUser);
   const teams = [...new Set(studentsWithTeamStats.map(s => s.Team))];
+  const programs = [...new Set(studentsWithTeamStats.map(s => s.Program))];
   const totalRaised = studentsWithTeamStats.reduce((sum, s) => sum + s.NetRaised, 0);
   const totalCards = studentsWithTeamStats.reduce((sum, s) => sum + s.CardsSold, 0);
 
@@ -143,11 +254,109 @@ const FundraisingApp = () => {
     }
   };
 
+  // Referral form handlers
+  const handleReferralFormChange = (field, value) => {
+    setReferralFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    
+    // Clear error for this field when user starts typing
+    if (referralFormErrors[field]) {
+      setReferralFormErrors(prev => ({
+        ...prev,
+        [field]: ''
+      }));
+    }
+  };
+
+  const handleSaveReferral = async () => {
+    // Validate form data
+    const validation = validateReferralForm(referralFormData);
+    
+    if (!validation.isValid) {
+      setReferralFormErrors(validation.errors);
+      return;
+    }
+
+    setIsSavingReferral(true);
+    setReferralSaveMessage('');
+    setReferralFormErrors({});
+
+    try {
+      const referralData = {
+        ...referralFormData,
+        studentId: currentStudent?.StudentID,
+        points: parseInt(referralFormData.points) || 0
+      };
+
+      const result = await saveReferral(referralData);
+
+      if (result.success) {
+        setReferralSaveMessage('Referral saved successfully!');
+        
+        // Reset form
+        setReferralFormData({
+          referralName: '',
+          referralEmail: '',
+          referralPhone: '',
+          organization: '',
+          stage: 'Contacted',
+          points: 0
+        });
+        
+        // Refresh data to show the new referral
+        setTimeout(() => {
+          window.location.reload(); // Simple refresh - could be optimized with state update
+        }, 1500);
+      } else {
+        setReferralSaveMessage(`Error: ${result.error}`);
+      }
+    } catch (error) {
+      setReferralSaveMessage(`Error: ${error.message}`);
+    } finally {
+      setIsSavingReferral(false);
+    }
+  };
+
+  const resetReferralForm = () => {
+    setReferralFormData({
+      referralName: '',
+      referralEmail: '',
+      referralPhone: '',
+      organization: '',
+      stage: 'Contacted',
+      points: 0
+    });
+    setReferralFormErrors({});
+    setReferralSaveMessage('');
+  };
+
   const filteredStudents = studentsWithTeamStats.filter(s => {
     const matchesSearch = s.FullName.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesTeam = !teamFilter || s.Team === teamFilter;
     return matchesSearch && matchesTeam;
   });
+
+  const getStageColor = (stage) => {
+    switch(stage) {
+      case 'Contacted': return 'bg-gray-100 text-gray-700 border-gray-300';
+      case 'Interested': return 'bg-blue-100 text-blue-700 border-blue-300';
+      case 'Meeting Scheduled': return 'bg-orange-100 text-orange-700 border-orange-300';
+      case 'Signed Up': return 'bg-green-100 text-green-700 border-green-300';
+      default: return 'bg-gray-100 text-gray-700 border-gray-300';
+    }
+  };
+  
+  const getStageIcon = (stage) => {
+    switch(stage) {
+      case 'Contacted': return '⏱️';
+      case 'Interested': return '📈';
+      case 'Meeting Scheduled': return '👥';
+      case 'Signed Up': return '✅';
+      default: return '⏱️';
+    }
+  };
 
   if (loading) {
     return (
@@ -178,40 +387,28 @@ const FundraisingApp = () => {
         </div>
       </div>
 
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-6xl mx-auto flex">
-          <button
-            onClick={() => setActiveTab('mystats')}
-            className={`flex-1 py-4 px-6 font-semibold transition-colors ${
-              activeTab === 'mystats'
-                ? 'text-cyan-600 border-b-4 border-cyan-500 bg-cyan-50 shadow-inner'
-                : 'text-gray-600 hover:text-cyan-500 hover:bg-cyan-50'
-            }`}
-          >
-            My Stats
-          </button>
-          <button
-            onClick={() => setActiveTab('myteam')}
-            className={`flex-1 py-4 px-6 font-semibold transition-colors ${
-              activeTab === 'myteam'
-                ? 'text-cyan-600 border-b-4 border-cyan-500 bg-cyan-50 shadow-inner'
-                : 'text-gray-600 hover:text-cyan-500 hover:bg-cyan-50'
-            }`}
-          >
-            My Team
-          </button>
-          <button
-            onClick={() => setActiveTab('everyone')}
-            className={`flex-1 py-4 px-6 font-semibold transition-colors ${
-              activeTab === 'everyone'
-                ? 'text-cyan-600 border-b-4 border-cyan-500 bg-cyan-50 shadow-inner'
-                : 'text-gray-600 hover:text-cyan-500 hover:bg-cyan-50'
-            }`}
-          >
-            Everyone
-          </button>
-        </div>
-      </div>
+      <div className="bg-white shadow-lg border-b-2 border-cyan-200">
+  <div className="max-w-6xl mx-auto flex overflow-x-auto">
+    {['mystats', 'myteam', 'everyone', 'teamvsteam', 'referrals'].map(tab => (
+      <button
+        key={tab}
+        onClick={() => setActiveTab(tab)}
+        className={`py-4 px-6 font-bold transition-all whitespace-nowrap ${
+          activeTab === tab
+            ? 'text-cyan-600 border-b-4 border-cyan-500 bg-cyan-50 shadow-inner'
+            : 'text-gray-600 hover:text-cyan-500 hover:bg-cyan-50'
+        }`}
+      >
+        {tab === 'mystats' && 'My Stats'}
+        {tab === 'myteam' && 'My Team'}
+        {tab === 'everyone' && 'Everyone'}
+        {tab === 'teamvsteam' && 'Team vs Team'}
+        {tab === 'referrals' && 'Referrals'}
+      </button>
+    ))}
+  </div>
+</div>
+
 
       <div className="max-w-6xl mx-auto p-6">
         {activeTab === 'mystats' && currentStudent && (
@@ -463,6 +660,309 @@ const FundraisingApp = () => {
             </div>
           </div>
         )}
+
+{activeTab === 'teamvsteam' && (
+  <div className="space-y-6">
+    <div className="bg-white rounded-2xl shadow-2xl p-6 border-t-4 border-cyan-400">
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
+        <h3 className="text-2xl font-black bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent flex items-center gap-2">
+          <Target className="w-8 h-8 text-cyan-600" />
+          Team vs Team Rankings
+        </h3>
+        <select
+          value={programFilter}
+          onChange={(e) => setProgramFilter(e.target.value)}
+          className="px-4 py-2 border-2 border-cyan-300 rounded-xl font-bold text-gray-700 focus:ring-2 focus:ring-cyan-500"
+        >
+          <option value="">All Programs</option>
+          {programs.map(program => (
+            <option key={program} value={program}>{program}</option>
+          ))}
+        </select>
+      </div>
+
+      <div className="space-y-4">
+        {teamRankings
+          .filter(team => !programFilter || team.Program === programFilter)
+          .map((team, index) => {
+            const filteredTeams = teamRankings.filter(t => !programFilter || t.Program === programFilter);
+            const previousTeam = index > 0 ? filteredTeams[index - 1] : null;
+            const gap = previousTeam ? previousTeam.TotalRaised - team.TotalRaised : 0;
+            
+            return (
+              <div key={`${team.Team}-${team.Program}`} className="border-3 border-cyan-300 hover:border-cyan-500 hover:shadow-2xl rounded-2xl p-6 transition-all bg-gradient-to-r from-white to-cyan-50 transform hover:scale-105">
+                <div className="flex items-center gap-4 flex-wrap">
+                  <div className="w-16 h-16 flex items-center justify-center bg-gradient-to-br from-cyan-400 to-blue-500 rounded-full font-black text-white text-2xl shadow-xl shadow-cyan-500/50 ring-4 ring-cyan-300">
+                    {team.Medal || `#${team.Rank}`}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-black text-gray-900 text-xl truncate">{team.Team}</div>
+                    <div className="text-sm font-bold text-gray-600">{team.Program} • {team.MemberCount} members</div>
+                    {gap > 0 && (
+                      <div className="text-xs text-orange-600 font-bold mt-1">
+                        ${gap} behind leader
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <div className="text-3xl font-black text-emerald-600">${team.TotalRaised}</div>
+                    <div className="text-sm font-bold text-gray-600">{team.TotalCards} cards</div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+      </div>
+    </div>
+  </div>
+)}
+
+{activeTab === 'referrals' && currentStudent && (
+  <div className="space-y-6">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="bg-gradient-to-br from-purple-400 to-fuchsia-500 rounded-2xl shadow-2xl shadow-purple-500/50 p-6 border-2 border-purple-300">
+        <div className="text-sm font-black text-white mb-2 drop-shadow">My Referrals</div>
+        <div className="text-4xl font-black text-white drop-shadow-lg">{currentStudent.Rel_Referrals.length}</div>
+      </div>
+      <div className="bg-gradient-to-br from-green-400 to-emerald-500 rounded-2xl shadow-2xl shadow-green-500/50 p-6 border-2 border-green-300">
+        <div className="text-sm font-black text-white mb-2 drop-shadow">Signed Up</div>
+        <div className="text-4xl font-black text-white drop-shadow-lg">
+          {currentStudent.Rel_Referrals.filter(r => r.Stage === 'Signed Up').length}
+        </div>
+      </div>
+      <div className="bg-gradient-to-br from-orange-400 to-pink-500 rounded-2xl shadow-2xl shadow-orange-500/50 p-6 border-2 border-orange-300">
+        <div className="text-sm font-black text-white mb-2 drop-shadow">Referral Points</div>
+        <div className="text-4xl font-black text-white drop-shadow-lg">{currentStudent.ReferralPoints}</div>
+      </div>
+    </div>
+
+    <button
+      onClick={() => setShowReferralForm(!showReferralForm)}
+      className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-black py-4 px-6 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-2xl shadow-cyan-500/50 border-2 border-cyan-300 transform hover:scale-105"
+    >
+      <UserPlus className="w-6 h-6" />
+      {showReferralForm ? 'Close Form' : 'Add New Referral'}
+    </button>
+
+    {showReferralForm && (
+      <div className="bg-white rounded-2xl shadow-2xl p-6 border-t-4 border-cyan-400">
+        <h3 className="text-xl font-black text-gray-900 mb-4">New Referral</h3>
+        
+        {referralSaveMessage && (
+          <div className={`mb-4 p-4 rounded-xl border-2 ${
+            referralSaveMessage.includes('Error') 
+              ? 'bg-red-50 border-red-300 text-red-700' 
+              : 'bg-green-50 border-green-300 text-green-700'
+          }`}>
+            <div className="flex items-center gap-2">
+              {referralSaveMessage.includes('Error') ? (
+                <AlertCircle className="w-5 h-5" />
+              ) : (
+                <CheckCircle className="w-5 h-5" />
+              )}
+              <span className="font-semibold">{referralSaveMessage}</span>
+            </div>
+          </div>
+        )}
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <input 
+              type="text" 
+              placeholder="Name *" 
+              value={referralFormData.referralName}
+              onChange={(e) => handleReferralFormChange('referralName', e.target.value)}
+              className={`px-4 py-3 border-2 rounded-xl font-semibold focus:ring-2 focus:ring-cyan-500 w-full ${
+                referralFormErrors.referralName ? 'border-red-300 bg-red-50' : 'border-gray-300'
+              }`}
+            />
+            {referralFormErrors.referralName && (
+              <p className="text-red-600 text-sm mt-1">{referralFormErrors.referralName}</p>
+            )}
+          </div>
+          
+          <div>
+            <input 
+              type="email" 
+              placeholder="Email *" 
+              value={referralFormData.referralEmail}
+              onChange={(e) => handleReferralFormChange('referralEmail', e.target.value)}
+              className={`px-4 py-3 border-2 rounded-xl font-semibold focus:ring-2 focus:ring-cyan-500 w-full ${
+                referralFormErrors.referralEmail ? 'border-red-300 bg-red-50' : 'border-gray-300'
+              }`}
+            />
+            {referralFormErrors.referralEmail && (
+              <p className="text-red-600 text-sm mt-1">{referralFormErrors.referralEmail}</p>
+            )}
+          </div>
+          
+          <div>
+            <input 
+              type="tel" 
+              placeholder="Phone *" 
+              value={referralFormData.referralPhone}
+              onChange={(e) => handleReferralFormChange('referralPhone', e.target.value)}
+              className={`px-4 py-3 border-2 rounded-xl font-semibold focus:ring-2 focus:ring-cyan-500 w-full ${
+                referralFormErrors.referralPhone ? 'border-red-300 bg-red-50' : 'border-gray-300'
+              }`}
+            />
+            {referralFormErrors.referralPhone && (
+              <p className="text-red-600 text-sm mt-1">{referralFormErrors.referralPhone}</p>
+            )}
+          </div>
+          
+          <div>
+            <input 
+              type="text" 
+              placeholder="Organization *" 
+              value={referralFormData.organization}
+              onChange={(e) => handleReferralFormChange('organization', e.target.value)}
+              className={`px-4 py-3 border-2 rounded-xl font-semibold focus:ring-2 focus:ring-cyan-500 w-full ${
+                referralFormErrors.organization ? 'border-red-300 bg-red-50' : 'border-gray-300'
+              }`}
+            />
+            {referralFormErrors.organization && (
+              <p className="text-red-600 text-sm mt-1">{referralFormErrors.organization}</p>
+            )}
+          </div>
+          
+          <div>
+            <select 
+              value={referralFormData.stage}
+              onChange={(e) => handleReferralFormChange('stage', e.target.value)}
+              className={`px-4 py-3 border-2 rounded-xl font-semibold focus:ring-2 focus:ring-cyan-500 w-full ${
+                referralFormErrors.stage ? 'border-red-300 bg-red-50' : 'border-gray-300'
+              }`}
+            >
+              <option value="Contacted">Contacted</option>
+              <option value="Interested">Interested</option>
+              <option value="Meeting Scheduled">Meeting Scheduled</option>
+              <option value="Signed Up">Signed Up</option>
+            </select>
+            {referralFormErrors.stage && (
+              <p className="text-red-600 text-sm mt-1">{referralFormErrors.stage}</p>
+            )}
+          </div>
+          
+          <div>
+            <input 
+              type="number" 
+              placeholder="Points (optional)" 
+              value={referralFormData.points}
+              onChange={(e) => handleReferralFormChange('points', parseInt(e.target.value) || 0)}
+              className="px-4 py-3 border-2 border-gray-300 rounded-xl font-semibold focus:ring-2 focus:ring-cyan-500 w-full"
+              min="0"
+            />
+          </div>
+        </div>
+        
+        <div className="flex gap-3 mt-6">
+          <button 
+            onClick={handleSaveReferral}
+            disabled={isSavingReferral}
+            className="flex-1 bg-gradient-to-r from-emerald-500 to-green-600 text-white font-black py-3 rounded-xl hover:from-emerald-600 hover:to-green-700 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {isSavingReferral ? (
+              <>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                Saving...
+              </>
+            ) : (
+              <>
+                <CheckCircle className="w-5 h-5" />
+                Add Referral
+              </>
+            )}
+          </button>
+          
+          <button 
+            onClick={resetReferralForm}
+            className="px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all"
+          >
+            Reset
+          </button>
+        </div>
+      </div>
+    )}
+
+    <div className="bg-white rounded-2xl shadow-2xl p-6 border-t-4 border-purple-400">
+      <h3 className="text-2xl font-black text-gray-900 mb-4 bg-gradient-to-r from-purple-600 to-fuchsia-600 bg-clip-text text-transparent">
+        My Referrals
+      </h3>
+      <div className="space-y-3">
+        {currentStudent.Rel_Referrals.length > 0 ? (
+          currentStudent.Rel_Referrals.map(referral => (
+            <div key={referral.ReferralID} className="border-2 border-gray-200 rounded-xl p-4 hover:border-purple-400 hover:shadow-lg transition-all">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex-1">
+                  <div className="font-black text-gray-900 text-lg">{referral.ReferralName}</div>
+                  <div className="text-sm text-gray-600 flex items-center gap-2 mt-1">
+                    <Building className="w-4 h-4" />
+                    {referral.Organization}
+                  </div>
+                </div>
+                <div className={`px-3 py-1 rounded-full border-2 font-bold text-xs flex items-center gap-1 ${getStageColor(referral.Stage)}`}>
+                  <span>{getStageIcon(referral.Stage)}</span>
+                  {referral.Stage}
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600">
+                <div className="flex items-center gap-2">
+                  <Mail className="w-4 h-4" />
+                  {referral.ReferralEmail}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Phone className="w-4 h-4" />
+                  {referral.ReferralPhone}
+                </div>
+              </div>
+              <div className="mt-3 pt-3 border-t border-gray-200 flex items-center justify-between">
+                <div className="text-sm text-gray-600">
+                  Added: {new Date(referral.DateAdded).toLocaleDateString()}
+                </div>
+                <div className="text-lg font-black text-purple-600">
+                  {referral.Points} points
+                </div>
+              </div>
+            </div>
+          ))
+        ) : (
+          <p className="text-gray-500 text-center py-8">No referrals yet. Add your first referral above!</p>
+        )}
+      </div>
+    </div>
+
+    <div className="bg-white rounded-2xl shadow-2xl p-6 border-t-4 border-orange-400">
+      <h3 className="text-2xl font-black text-gray-900 mb-4 bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent">
+        Referral Leaderboard
+      </h3>
+      <div className="space-y-3">
+        {referralRankings.slice(0, 10).map(student => (
+          <div key={student.StudentID} className="border-2 border-gray-200 rounded-xl p-4 hover:border-orange-400 hover:shadow-lg transition-all">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 flex items-center justify-center bg-gradient-to-br from-purple-400 to-fuchsia-500 rounded-full font-black text-white text-xl shadow-lg">
+                {student.Medal || `#${student.Rank}`}
+              </div>
+              {student.Avatar_URL && (
+                <img src={student.Avatar_URL} alt="Avatar" className="w-12 h-12 rounded-full" />
+              )}
+              <div className="flex-1">
+                <div className="font-black text-gray-900">{student.FullName}</div>
+                <div className="text-sm text-gray-600">{student.ReferralCount} referrals • {student.SignedUpCount} signed up</div>
+              </div>
+              <div className="text-right">
+                <div className="text-2xl font-black text-purple-600">{student.ReferralPoints}</div>
+                <div className="text-xs text-gray-500">points</div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+)}
+
+
       </div>
     </div>
   );
