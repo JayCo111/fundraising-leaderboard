@@ -12,9 +12,11 @@
  */
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Trophy, TrendingUp, Users, DollarSign, Share2, QrCode, Search, Filter, AlertCircle, Target, UserPlus, CheckCircle, Phone, Mail, Building } from 'lucide-react';
+import { Trophy, TrendingUp, Users, DollarSign, Share2, QrCode, Search, Filter, AlertCircle, Target, UserPlus, CheckCircle, Phone, Mail, Building, LogOut } from 'lucide-react';
 import { GOOGLE_SHEETS_CONFIG } from './config/googleSheets';
 import { saveReferral, validateReferralForm } from './utils/googleSheetsWrite';
+import LoginPage from './components/LoginPage';
+import ProfilePage from './components/ProfilePage';
 
 const FundraisingApp = () => {
   const [studentsData, setStudentsData] = useState([]);
@@ -23,11 +25,11 @@ const FundraisingApp = () => {
   const [, setProgramsData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [currentUser] = useState('john.parent@example.com');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentStudent, setCurrentStudent] = useState(null);
   const [activeTab, setActiveTab] = useState('mystats');
   const [searchTerm, setSearchTerm] = useState('');
   const [teamFilter, setTeamFilter] = useState('');
-  const [showQR, setShowQR] = useState(false);
   const [programFilter, setProgramFilter] = useState('');
   const [showReferralForm, setShowReferralForm] = useState(false);
   
@@ -44,10 +46,164 @@ const FundraisingApp = () => {
   const [isSavingReferral, setIsSavingReferral] = useState(false);
   const [referralSaveMessage, setReferralSaveMessage] = useState('');
 
+  // Authentication handlers
+  const handleLogin = (student) => {
+    setCurrentStudent(student);
+    setIsAuthenticated(true);
+  };
+
+  const handleLogout = () => {
+    setCurrentStudent(null);
+    setIsAuthenticated(false);
+    setActiveTab('mystats');
+  };
+
   useEffect(() => {
     const fetchSheetData = async () => {
+      // Only fetch data if we have API credentials
+      if (!GOOGLE_SHEETS_CONFIG.SHEET_ID || !GOOGLE_SHEETS_CONFIG.API_KEY) {
+        // Set demo data for testing when Google Sheets isn't configured
+        setStudentsData([
+          {
+            StudentID: 'STU001',
+            FirstName: 'John',
+            LastName: 'Smith',
+            Team: 'Emeralds',
+            Goal_$: 1000,
+            ParentEmail: 'john.parent@example.com',
+            PersonalLink: 'https://example.com/john-fundraising',
+            QR_URL: '',
+            Avatar_URL: '',
+            Program: 'Spring 2024',
+            QR_Link: 'https://example.com/qr/john'
+          },
+          {
+            StudentID: 'STU002',
+            FirstName: 'Sarah',
+            LastName: 'Johnson',
+            Team: 'Emeralds',
+            Goal_$: 800,
+            ParentEmail: 'sarah.parent@example.com',
+            PersonalLink: 'https://example.com/sarah-fundraising',
+            QR_URL: '',
+            Avatar_URL: '',
+            Program: 'Spring 2024',
+            QR_Link: 'https://example.com/qr/sarah'
+          },
+          {
+            StudentID: 'STU003',
+            FirstName: 'Mike',
+            LastName: 'Davis',
+            Team: 'Emeralds',
+            Goal_$: 1200,
+            ParentEmail: 'mike.parent@example.com',
+            PersonalLink: 'https://example.com/mike-fundraising',
+            QR_URL: '',
+            Avatar_URL: '',
+            Program: 'Spring 2024',
+            QR_Link: 'https://example.com/qr/mike'
+          },
+          {
+            StudentID: 'STU004',
+            FirstName: 'Emma',
+            LastName: 'Wilson',
+            Team: 'Diamonds',
+            Goal_$: 900,
+            ParentEmail: 'emma.parent@example.com',
+            PersonalLink: 'https://example.com/emma-fundraising',
+            QR_URL: '',
+            Avatar_URL: '',
+            Program: 'Spring 2024',
+            QR_Link: 'https://example.com/qr/emma'
+          }
+        ]);
+        setOrdersData([
+          {
+            Timestamp: '2024-01-15',
+            OrderID: 'ORD001',
+            BuyerName: 'Alice Johnson',
+            BuyerEmail: 'alice@example.com',
+            BuyerPhone: '555-0101',
+            Quantity: 5,
+            TotalPaid: 25.00,
+            StudentID: 'STU001',
+            Status: 'Paid'
+          },
+          {
+            Timestamp: '2024-01-16',
+            OrderID: 'ORD002',
+            BuyerName: 'Bob Smith',
+            BuyerEmail: 'bob@example.com',
+            BuyerPhone: '555-0102',
+            Quantity: 3,
+            TotalPaid: 15.00,
+            StudentID: 'STU001',
+            Status: 'Paid'
+          },
+          {
+            Timestamp: '2024-01-17',
+            OrderID: 'ORD003',
+            BuyerName: 'Carol Davis',
+            BuyerEmail: 'carol@example.com',
+            BuyerPhone: '555-0103',
+            Quantity: 8,
+            TotalPaid: 40.00,
+            StudentID: 'STU002',
+            Status: 'Paid'
+          },
+          {
+            Timestamp: '2024-01-18',
+            OrderID: 'ORD004',
+            BuyerName: 'David Wilson',
+            BuyerEmail: 'david@example.com',
+            BuyerPhone: '555-0104',
+            Quantity: 6,
+            TotalPaid: 30.00,
+            StudentID: 'STU002',
+            Status: 'Paid'
+          },
+          {
+            Timestamp: '2024-01-19',
+            OrderID: 'ORD005',
+            BuyerName: 'Eva Brown',
+            BuyerEmail: 'eva@example.com',
+            BuyerPhone: '555-0105',
+            Quantity: 10,
+            TotalPaid: 50.00,
+            StudentID: 'STU003',
+            Status: 'Paid'
+          },
+          {
+            Timestamp: '2024-01-20',
+            OrderID: 'ORD006',
+            BuyerName: 'Frank Miller',
+            BuyerEmail: 'frank@example.com',
+            BuyerPhone: '555-0106',
+            Quantity: 4,
+            TotalPaid: 20.00,
+            StudentID: 'STU003',
+            Status: 'Paid'
+          },
+          {
+            Timestamp: '2024-01-21',
+            OrderID: 'ORD007',
+            BuyerName: 'Grace Taylor',
+            BuyerEmail: 'grace@example.com',
+            BuyerPhone: '555-0107',
+            Quantity: 7,
+            TotalPaid: 35.00,
+            StudentID: 'STU004',
+            Status: 'Paid'
+          }
+        ]);
+        setReferralsData([]);
+        setLoading(false);
+        return;
+      }
+
       try {
-        setLoading(true);console.log('Sheet ID:', GOOGLE_SHEETS_CONFIG.SHEET_ID);
+        setLoading(true);
+        console.log('Sheet ID:', GOOGLE_SHEETS_CONFIG.SHEET_ID);
         console.log('API Key:', GOOGLE_SHEETS_CONFIG.API_KEY);
         console.log('Starting fetch...');
         
@@ -81,10 +237,11 @@ const programsJson = await programsResponse.json();
             Team: row[3] || '',
             Goal_$: parseFloat(row[4]) || 0,
             ParentEmail: row[5] || '',
-            PersonalLink: row[6] || '',
+            PersonalLink: row[6] || '', // Column G
             QR_URL: row[7] || '',
             Avatar_URL: row[8] || '',
-            Program: row[9] || ''
+            Program: row[9] || '',
+            QR_Link: row[10] || '' // Column K
           }));
           setStudentsData(students);
         }
@@ -141,12 +298,12 @@ const programsJson = await programsResponse.json();
 
   const enrichedStudents = useMemo(() => {
     return studentsData.map(student => {
-      const studentOrders = ordersData.filter(o => o.StudentID === student.StudentID);
+      const studentOrders = ordersData?.filter(o => o.StudentID === student.StudentID) || [];
       const NetQty = studentOrders.reduce((sum, o) => sum + (o.Status === 'Refunded' ? 0 : o.Quantity), 0);
       const NetRaised = studentOrders.reduce((sum, o) => sum + (o.Status === 'Refunded' ? 0 : o.TotalPaid), 0);
       const ProgressPct = student.Goal_$ > 0 ? NetRaised / student.Goal_$ : 0;
       const FullName = `${student.FirstName} ${student.LastName}`;
-      const studentReferrals = referralsData.filter(r => r.StudentID === student.StudentID);
+      const studentReferrals = referralsData?.filter(r => r.StudentID === student.StudentID) || [];
       const ReferralPoints = studentReferrals.reduce((sum, r) => sum + r.Points, 0);
       
       return {
@@ -189,59 +346,59 @@ const programsJson = await programsResponse.json();
       };
     });
   }, [rankedStudents]);
+
   // Team vs Team Rankings
-const teamRankings = useMemo(() => {
-  const teamMap = new Map();
-  
-  studentsWithTeamStats.forEach(student => {
-    const key = `${student.Team}-${student.Program}`;
-    if (!teamMap.has(key)) {
-      teamMap.set(key, {
-        Team: student.Team,
-        Program: student.Program,
-        TotalRaised: 0,
-        TotalCards: 0,
-        MemberCount: 0
-      });
-    }
-    const team = teamMap.get(key);
-    team.TotalRaised += student.NetRaised;
-    team.TotalCards += student.CardsSold;
-    team.MemberCount += 1;
-  });
-
-  const teams = Array.from(teamMap.values()).sort((a, b) => b.TotalRaised - a.TotalRaised);
-  return teams.map((team, index) => ({
-    ...team,
-    Rank: index + 1,
-    Medal: index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : ''
-  }));
-}, [studentsWithTeamStats]);
-
-const referralRankings = useMemo(() => {
-  const studentReferralMap = new Map();
-  
-  studentsWithTeamStats.forEach(student => {
-    studentReferralMap.set(student.StudentID, {
-      StudentID: student.StudentID,
-      FullName: student.FullName,
-      Avatar_URL: student.Avatar_URL,
-      ReferralCount: student.Rel_Referrals.length,
-      ReferralPoints: student.ReferralPoints,
-      SignedUpCount: student.Rel_Referrals.filter(r => r.Stage === 'Signed Up').length
+  const teamRankings = useMemo(() => {
+    const teamMap = new Map();
+    
+    studentsWithTeamStats.forEach(student => {
+      const key = `${student.Team}-${student.Program}`;
+      if (!teamMap.has(key)) {
+        teamMap.set(key, {
+          Team: student.Team,
+          Program: student.Program,
+          TotalRaised: 0,
+          TotalCards: 0,
+          MemberCount: 0
+        });
+      }
+      const team = teamMap.get(key);
+      team.TotalRaised += student.NetRaised;
+      team.TotalCards += student.CardsSold;
+      team.MemberCount += 1;
     });
-  });
 
-  return Array.from(studentReferralMap.values())
-    .sort((a, b) => b.ReferralPoints - a.ReferralPoints)
-    .map((student, index) => ({
-      ...student,
+    const teams = Array.from(teamMap.values()).sort((a, b) => b.TotalRaised - a.TotalRaised);
+    return teams.map((team, index) => ({
+      ...team,
       Rank: index + 1,
       Medal: index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : ''
     }));
-}, [studentsWithTeamStats]);
+  }, [studentsWithTeamStats]);
 
-  const currentStudent = studentsWithTeamStats.find(s => s.ParentEmail === currentUser);
+  const referralRankings = useMemo(() => {
+    const studentReferralMap = new Map();
+    
+    studentsWithTeamStats.forEach(student => {
+      studentReferralMap.set(student.StudentID, {
+        StudentID: student.StudentID,
+        FullName: student.FullName,
+        Avatar_URL: student.Avatar_URL,
+        ReferralCount: student.Rel_Referrals?.length || 0,
+        ReferralPoints: student.ReferralPoints,
+        SignedUpCount: student.Rel_Referrals?.filter(r => r.Stage === 'Signed Up').length || 0
+      });
+    });
+
+    return Array.from(studentReferralMap.values())
+      .sort((a, b) => b.ReferralPoints - a.ReferralPoints)
+      .map((student, index) => ({
+        ...student,
+        Rank: index + 1,
+        Medal: index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : ''
+      }));
+  }, [studentsWithTeamStats]);
+
   const teams = [...new Set(studentsWithTeamStats.map(s => s.Team))];
   const programs = [...new Set(studentsWithTeamStats.map(s => s.Program))];
   const totalRaised = studentsWithTeamStats.reduce((sum, s) => sum + s.NetRaised, 0);
@@ -251,6 +408,15 @@ const referralRankings = useMemo(() => {
     if (currentStudent?.PersonalLink) {
       navigator.clipboard.writeText(currentStudent.PersonalLink);
       alert('Link copied to clipboard!');
+    }
+  };
+
+  const copyQRLink = () => {
+    if (currentStudent?.QR_Link) {
+      navigator.clipboard.writeText(currentStudent.QR_Link);
+      alert('QR Link copied to clipboard!');
+    } else {
+      alert('No QR link available');
     }
   };
 
@@ -369,6 +535,11 @@ const referralRankings = useMemo(() => {
     );
   }
 
+  // Show login page if not authenticated
+  if (!isAuthenticated) {
+    return <LoginPage onLogin={handleLogin} studentsData={studentsWithTeamStats} loading={loading} />;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-cyan-100 via-blue-50 to-fuchsia-100">
       <div className="bg-gradient-to-r from-cyan-400 via-blue-500 to-blue-600 text-white p-6 shadow-2xl shadow-cyan-500/50">
@@ -377,7 +548,18 @@ const referralRankings = useMemo(() => {
             <Trophy className="w-8 h-8" />
             <h1 className="text-3xl font-bold">Fundraising Leaderboard</h1>
           </div>
-          <div className="text-sm opacity-90">Signed in as: {currentUser}</div>
+          <div className="flex items-center justify-between">
+            <div className="text-sm opacity-90">
+              Signed in as: {currentStudent?.ParentEmail}
+            </div>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-3 py-1 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg transition-all"
+            >
+              <LogOut className="w-4 h-4" />
+              Logout
+            </button>
+          </div>
           {error && (
             <div className="mt-3 bg-yellow-500 bg-opacity-20 border border-yellow-300 rounded-lg p-3 flex items-start gap-2">
               <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
@@ -389,7 +571,7 @@ const referralRankings = useMemo(() => {
 
       <div className="bg-white shadow-lg border-b-2 border-cyan-200">
   <div className="max-w-6xl mx-auto flex overflow-x-auto">
-    {['mystats', 'myteam', 'everyone', 'teamvsteam', 'referrals'].map(tab => (
+    {['mystats', 'myteam', 'everyone', 'teamvsteam', 'referrals', 'profile'].map(tab => (
       <button
         key={tab}
         onClick={() => setActiveTab(tab)}
@@ -404,6 +586,7 @@ const referralRankings = useMemo(() => {
         {tab === 'everyone' && 'Everyone'}
         {tab === 'teamvsteam' && 'Team vs Team'}
         {tab === 'referrals' && 'Referrals'}
+        {tab === 'profile' && 'Profile'}
       </button>
     ))}
   </div>
@@ -487,26 +670,20 @@ const referralRankings = useMemo(() => {
                   Copy My Link
                 </button>
                 <button
-                  onClick={() => setShowQR(!showQR)}
+                  onClick={copyQRLink}
                   className="flex-1 bg-gradient-to-r from-blue-500 to-fuchsia-600 hover:from-blue-600 hover:to-fuchsia-700 text-white font-black py-4 px-6 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-2xl shadow-fuchsia-500/50 border-2 border-fuchsia-300 transform hover:scale-105"
                 >
                   <QrCode className="w-5 h-5" />
-                  Show My QR
+                  Copy My QR Link
                 </button>
               </div>
-
-              {showQR && currentStudent.QR_URL && (
-                <div className="mt-4 p-4 bg-gray-50 rounded-xl text-center">
-                  <img src={currentStudent.QR_URL} alt="QR Code" className="mx-auto" />
-                </div>
-              )}
             </div>
 
             <div className="bg-white rounded-2xl shadow-2xl p-6">
               <h3 className="text-xl font-bold text-gray-900 mb-4">My Orders</h3>
               <div className="space-y-3">
-                {currentStudent.Rel_Orders.length > 0 ? (
-                  currentStudent.Rel_Orders.map(order => (
+                {currentStudent.Rel_Orders?.length > 0 ? (
+                  currentStudent.Rel_Orders?.map(order => (
                     <div key={order.OrderID} className="border border-gray-200 rounded-lg p-4 hover:border-cyan-300 transition-colors">
                       <div className="flex justify-between items-start mb-2">
                         <div className="font-semibold text-gray-900">{order.BuyerName}</div>
@@ -546,7 +723,7 @@ const referralRankings = useMemo(() => {
             <div className="bg-white rounded-2xl shadow-2xl p-6">
               <h3 className="text-xl font-bold text-gray-900 mb-4">Team: {currentStudent.Team}</h3>
               <div className="space-y-3">
-                {currentStudent.Rel_TeamMates.map((teammate) => (
+                {currentStudent.Rel_TeamMates?.map((teammate) => (
                   <div
                     key={teammate.StudentID}
                     className={`border-2 rounded-lg p-4 transition-all ${
@@ -722,12 +899,12 @@ const referralRankings = useMemo(() => {
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div className="bg-gradient-to-br from-purple-400 to-fuchsia-500 rounded-2xl shadow-2xl shadow-purple-500/50 p-6 border-2 border-purple-300">
         <div className="text-sm font-black text-white mb-2 drop-shadow">My Referrals</div>
-        <div className="text-4xl font-black text-white drop-shadow-lg">{currentStudent.Rel_Referrals.length}</div>
+        <div className="text-4xl font-black text-white drop-shadow-lg">{currentStudent.Rel_Referrals?.length || 0}</div>
       </div>
       <div className="bg-gradient-to-br from-green-400 to-emerald-500 rounded-2xl shadow-2xl shadow-green-500/50 p-6 border-2 border-green-300">
         <div className="text-sm font-black text-white mb-2 drop-shadow">Signed Up</div>
         <div className="text-4xl font-black text-white drop-shadow-lg">
-          {currentStudent.Rel_Referrals.filter(r => r.Stage === 'Signed Up').length}
+          {currentStudent.Rel_Referrals?.filter(r => r.Stage === 'Signed Up').length || 0}
         </div>
       </div>
       <div className="bg-gradient-to-br from-orange-400 to-pink-500 rounded-2xl shadow-2xl shadow-orange-500/50 p-6 border-2 border-orange-300">
@@ -890,8 +1067,8 @@ const referralRankings = useMemo(() => {
         My Referrals
       </h3>
       <div className="space-y-3">
-        {currentStudent.Rel_Referrals.length > 0 ? (
-          currentStudent.Rel_Referrals.map(referral => (
+        {currentStudent.Rel_Referrals?.length > 0 ? (
+          currentStudent.Rel_Referrals?.map(referral => (
             <div key={referral.ReferralID} className="border-2 border-gray-200 rounded-xl p-4 hover:border-purple-400 hover:shadow-lg transition-all">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1">
@@ -961,6 +1138,21 @@ const referralRankings = useMemo(() => {
     </div>
   </div>
 )}
+
+        {activeTab === 'profile' && currentStudent && (
+          <ProfilePage 
+            currentStudent={currentStudent} 
+            onUpdateProfile={(updatedStudent) => {
+              setCurrentStudent(updatedStudent);
+              // Update the students data to reflect changes
+              setStudentsData(prev => 
+                prev.map(student => 
+                  student.StudentID === updatedStudent.StudentID ? updatedStudent : student
+                )
+              );
+            }} 
+          />
+        )}
 
 
       </div>
