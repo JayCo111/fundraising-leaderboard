@@ -1,6 +1,6 @@
 // src/components/MyTeamTab.js
 import React from 'react';
-import { Trophy, Users, Target, TrendingUp } from 'lucide-react';
+import { Trophy, Users, Target, TrendingUp, DollarSign } from 'lucide-react';
 
 const MyTeamTab = ({ currentStudent }) => {
   if (!currentStudent) return null;

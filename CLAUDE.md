@@ -148,6 +148,80 @@ REACT_APP_GOOGLE_APPS_SCRIPT_URL=your_apps_script_url
 
 See `WRITE_FUNCTIONALITY_SETUP.md` for Google Apps Script deployment instructions.
 
+## Code Quality Standards
+
+### CRITICAL: Always Ensure Clean Builds
+
+**Before committing ANY code, you MUST:**
+
+1. **Check for all required imports**: Every icon, component, or utility used in JSX must be imported
+2. **Run linting**: `npm run lint:check` to catch errors before commit
+3. **Fix all ESLint errors**: Warnings are acceptable, but errors will break the build
+4. **Test the build locally**: If possible, run `npm run build` to ensure production build succeeds
+
+### Common Issues to Avoid
+
+#### 1. Missing Icon Imports
+❌ **WRONG:**
+```javascript
+import { Trophy } from 'lucide-react';
+
+<DollarSign className="w-4 h-4" /> // DollarSign not imported!
+```
+
+✅ **CORRECT:**
+```javascript
+import { Trophy, DollarSign } from 'lucide-react';
+
+<DollarSign className="w-4 h-4" />
+```
+
+#### 2. Template Variables in Strings
+❌ **WRONG:**
+```javascript
+const template = `Total: ${{amount}}`; // ESLint error: 'amount' is not defined
+```
+
+✅ **CORRECT:**
+```javascript
+// eslint-disable-next-line no-template-curly-in-string
+const template = `Total: $\${amount}`; // Escaped for Mustache templates
+```
+
+#### 3. Unused Variables
+- Remove unused imports and variables
+- If a variable is defined for future use, prefix with underscore: `_futureFeature`
+
+#### 4. Console Statements
+- Console logs are **warnings** (acceptable in development)
+- Remove before production deployment when possible
+
+### Pre-Commit Checklist
+
+```bash
+# 1. Lint the code
+npm run lint:check
+
+# 2. Fix auto-fixable issues
+npm run lint
+
+# 3. Format code
+npm run format
+
+# 4. Verify no ESLint ERRORS remain (warnings are OK)
+# Errors = build will fail
+# Warnings = build succeeds but code could be cleaner
+```
+
+### Build Error Recovery
+
+If Vercel build fails:
+1. Read the error log carefully - it shows exact file:line numbers
+2. Fix all `react/jsx-no-undef` errors (missing imports)
+3. Fix all `no-undef` errors (undefined variables)
+4. Re-run `npm run lint:check` locally
+5. Commit and push the fixes
+
 ## Important Notes
 
 - **Demo data fallback**: If Google Sheets credentials missing, app uses hardcoded demo data

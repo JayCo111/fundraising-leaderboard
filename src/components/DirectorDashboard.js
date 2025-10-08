@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  BarChart3, 
-  TrendingUp, 
-  Users, 
-  DollarSign, 
-  Target, 
+import {
+  BarChart3,
+  TrendingUp,
+  Users,
+  DollarSign,
+  Target,
   Award,
   Building,
   MapPin,
@@ -15,7 +15,8 @@ import {
   Eye,
   Settings,
   MessageSquare,
-  Gift
+  Gift,
+  Shield
 } from 'lucide-react';
 import MessagingCenter from './MessagingCenter';
 import PayoutsRewards from './PayoutsRewards';

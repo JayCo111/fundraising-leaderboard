@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  DollarSign, 
-  Gift, 
-  Award, 
-  Users, 
+import {
+  DollarSign,
+  Gift,
+  Award,
+  Users,
   TrendingUp,
   Calendar,
   Settings,
@@ -28,7 +28,8 @@ import {
   Crown,
   Medal,
   Zap,
-  Heart
+  Heart,
+  Package
 } from 'lucide-react';
 import { Role } from '../types';
 

@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  Send, 
-  Mail, 
-  MessageSquare, 
-  Users, 
-  Clock, 
-  CheckCircle, 
+import {
+  Send,
+  Mail,
+  MessageSquare,
+  Users,
+  Clock,
+  CheckCircle,
   AlertCircle,
   Search,
   Filter,
@@ -18,6 +18,7 @@ import {
   Phone,
   User,
   Building,
+  UserPlus,
   Target,
   TrendingUp,
   FileText,

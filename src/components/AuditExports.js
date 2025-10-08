@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  FileText, 
-  Download, 
-  Search, 
+import {
+  FileText,
+  Download,
+  Search,
   Filter,
   Calendar,
   User,
@@ -28,6 +28,10 @@ import {
   ArrowUp,
   ArrowDown,
   ExternalLink,
+  DollarSign,
+  Users,
+  MessageSquare,
+  Gift,
   Copy,
   Share2
 } from 'lucide-react';

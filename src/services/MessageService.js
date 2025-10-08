@@ -36,11 +36,12 @@ Best regards,
     id: 'team_motivation',
     name: 'Team Motivation',
     type: MESSAGE_TYPES.SMS,
+    // eslint-disable-next-line no-template-curly-in-string
     template: `Hey {{athleteName}}! 🏆
 
 Great job on your fundraising progress! You're currently at {{progress}}% of your goal.
 
-Keep up the momentum! Every card sold helps our team reach our goal of ${{teamGoal}}.
+Keep up the momentum! Every card sold helps our team reach our goal of $\${teamGoal}.
 
 Go {{teamName}}! 💪
 
@@ -53,12 +54,13 @@ Go {{teamName}}! 💪
     name: 'Program Update',
     type: MESSAGE_TYPES.EMAIL,
     subject: '{{programName}} - Weekly Update',
+    // eslint-disable-next-line no-template-curly-in-string
     template: `Dear {{recipientName}},
 
 Here's your weekly update for {{programName}}:
 
 📊 Current Stats:
-- Total Raised: ${{totalRaised}}
+- Total Raised: $\${totalRaised}
 - Cards Sold: {{cardsSold}}
 - Participation Rate: {{participationRate}}%
 - Goal Progress: {{goalProgress}}%
@@ -78,14 +80,15 @@ Best regards,
     name: 'Transaction Confirmation',
     type: MESSAGE_TYPES.EMAIL,
     subject: 'Thank you for your donation!',
+    // eslint-disable-next-line no-template-curly-in-string
     template: `Dear {{donorName}},
 
-Thank you for your generous donation of ${{amount}} to {{athleteName}}'s fundraising campaign!
+Thank you for your generous donation of $\${amount} to {{athleteName}}'s fundraising campaign!
 
 Your contribution helps {{organizationName}} continue providing excellent programs for our athletes.
 
 Transaction Details:
-- Amount: ${{amount}}
+- Amount: $\${amount}
 - Athlete: {{athleteName}}
 - Team: {{teamName}}
 - Date: {{transactionDate}}
