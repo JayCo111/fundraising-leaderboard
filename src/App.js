@@ -11,8 +11,8 @@
  * - Row-level privacy for parent access
  */
 
-import React, { useState, useMemo, useEffect } from 'react';
-import { Trophy, TrendingUp, Users, DollarSign, Share2, QrCode, Search, Filter, AlertCircle, Target, UserPlus, CheckCircle, Phone, Mail, Building, LogOut } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { Trophy, TrendingUp, Users, DollarSign, Share2, QrCode, AlertCircle, UserPlus, CheckCircle, Phone, Mail, Building, LogOut } from 'lucide-react';
 import { GOOGLE_SHEETS_CONFIG } from './config/googleSheets';
 import { saveReferral, validateReferralForm } from './utils/googleSheetsWrite';
 import LoginPage from './components/LoginPage';
@@ -33,9 +33,6 @@ const FundraisingApp = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentStudent, setCurrentStudent] = useState(null);
   const [activeTab, setActiveTab] = useState('mystats');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [teamFilter, setTeamFilter] = useState('');
-  const [programFilter, setProgramFilter] = useState('');
   const [showReferralForm, setShowReferralForm] = useState(false);
   const [showPlatformDemo, setShowPlatformDemo] = useState(false);
   
@@ -209,9 +206,6 @@ const FundraisingApp = () => {
 
       try {
         setLoading(true);
-        console.log('Sheet ID:', GOOGLE_SHEETS_CONFIG.SHEET_ID);
-        console.log('API Key:', GOOGLE_SHEETS_CONFIG.API_KEY);
-        console.log('Starting fetch...');
         
         const studentsResponse = await fetch(
           `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEETS_CONFIG.SHEET_ID}/values/${GOOGLE_SHEETS_CONFIG.STUDENTS_RANGE}?key=${GOOGLE_SHEETS_CONFIG.API_KEY}`
@@ -292,7 +286,6 @@ const programsJson = await programsResponse.json();
 
         setError(null);
       } catch (err) {
-        console.error('Error fetching sheet data:', err);
         setError('Failed to load data from Google Sheets');
       } finally {
         setLoading(false);
@@ -353,34 +346,6 @@ const programsJson = await programsResponse.json();
     });
   }, [rankedStudents]);
 
-  // Team vs Team Rankings
-  const teamRankings = useMemo(() => {
-    const teamMap = new Map();
-    
-    studentsWithTeamStats.forEach(student => {
-      const key = `${student.Team}-${student.Program}`;
-      if (!teamMap.has(key)) {
-        teamMap.set(key, {
-          Team: student.Team,
-          Program: student.Program,
-          TotalRaised: 0,
-          TotalCards: 0,
-          MemberCount: 0
-        });
-      }
-      const team = teamMap.get(key);
-      team.TotalRaised += student.NetRaised;
-      team.TotalCards += student.CardsSold;
-      team.MemberCount += 1;
-    });
-
-    const teams = Array.from(teamMap.values()).sort((a, b) => b.TotalRaised - a.TotalRaised);
-    return teams.map((team, index) => ({
-      ...team,
-      Rank: index + 1,
-      Medal: index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : ''
-    }));
-  }, [studentsWithTeamStats]);
 
   const referralRankings = useMemo(() => {
     const studentReferralMap = new Map();
@@ -405,10 +370,6 @@ const programsJson = await programsResponse.json();
       }));
   }, [studentsWithTeamStats]);
 
-  const teams = [...new Set(studentsWithTeamStats.map(s => s.Team))];
-  const programs = [...new Set(studentsWithTeamStats.map(s => s.Program))];
-  const totalRaised = studentsWithTeamStats.reduce((sum, s) => sum + s.NetRaised, 0);
-  const totalCards = studentsWithTeamStats.reduce((sum, s) => sum + s.CardsSold, 0);
 
   const copyLink = () => {
     if (currentStudent?.PersonalLink) {
@@ -503,12 +464,6 @@ const programsJson = await programsResponse.json();
     setReferralFormErrors({});
     setReferralSaveMessage('');
   };
-
-  const filteredStudents = studentsWithTeamStats.filter(s => {
-    const matchesSearch = s.FullName.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesTeam = !teamFilter || s.Team === teamFilter;
-    return matchesSearch && matchesTeam;
-  });
 
   const getStageColor = (stage) => {
     switch(stage) {

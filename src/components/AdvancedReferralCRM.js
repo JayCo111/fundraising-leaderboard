@@ -1,56 +1,32 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  UserPlus, 
-  Phone, 
-  Mail, 
-  Building, 
-  Calendar,
+import { useState, useEffect, useMemo } from 'react';
+import {
+  Phone,
+  Mail,
+  Building,
   Filter,
   Search,
   Plus,
   Edit,
-  Trash2,
   Eye,
-  CheckCircle,
-  Clock,
-  AlertCircle,
-  TrendingUp,
   Target,
   DollarSign,
   Users,
-  MessageSquare,
-  Send,
-  FileText,
   Download,
   BarChart3,
-  Award,
   Star,
-  Zap,
   ArrowRight,
-  ArrowLeft,
-  Play,
-  Pause,
-  RefreshCw,
-  Settings,
   Activity,
-  PieChart,
-  LineChart,
-  Crown,
-  Medal,
-  Trophy
+  Trophy,
+  TrendingUp
 } from 'lucide-react';
-import { ReferralCRMService, REFERRAL_STAGES, REFERRAL_TYPES } from '../services/ReferralCRMService';
+import { ReferralCRMService, REFERRAL_STAGES } from '../services/ReferralCRMService';
 import { Role } from '../types';
 
 const AdvancedReferralCRM = ({ userRole, userData, userScope }) => {
   const [activeTab, setActiveTab] = useState('pipeline');
   const [searchTerm, setSearchTerm] = useState('');
   const [stageFilter, setStageFilter] = useState('');
-  const [showAddProspect, setShowAddProspect] = useState(false);
-  const [selectedProspect, setSelectedProspect] = useState(null);
-  const [showStageUpdate, setShowStageUpdate] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
-  const [loading, setLoading] = useState(false);
 
   const referralService = useMemo(() => {
     const mockApiClient = new (class {
@@ -282,8 +258,6 @@ const AdvancedReferralCRM = ({ userRole, userData, userScope }) => {
       }
 
       async get(url) {
-        console.log('Mock Referral API GET:', url);
-        
         if (url.includes('/prospects')) {
           return { data: this.prospects };
         }
@@ -342,8 +316,6 @@ const AdvancedReferralCRM = ({ userRole, userData, userScope }) => {
       }
 
       async post(url, data) {
-        console.log('Mock Referral API POST:', url, data);
-        
         if (url.includes('/prospects')) {
           const prospect = {
             id: `prospect-${Date.now()}`,
@@ -369,8 +341,6 @@ const AdvancedReferralCRM = ({ userRole, userData, userScope }) => {
       }
 
       async put(url, data) {
-        console.log('Mock Referral API PUT:', url, data);
-        
         if (url.includes('/stage')) {
           const prospectId = url.split('/')[4];
           const prospect = this.prospects.find(p => p.id === prospectId);
@@ -386,12 +356,11 @@ const AdvancedReferralCRM = ({ userRole, userData, userScope }) => {
     })();
     
     return new ReferralCRMService(mockApiClient);
-  }, [userRole]);
+  }, []);
 
   const [prospects, setProspects] = useState([]);
   const [analytics, setAnalytics] = useState(null);
   const [leaderboard, setLeaderboard] = useState([]);
-  const [stats, setStats] = useState(null);
 
   const filteredProspects = useMemo(() => {
     return prospects.filter(prospect => {
@@ -421,15 +390,15 @@ const AdvancedReferralCRM = ({ userRole, userData, userScope }) => {
     loadProspects();
     loadAnalytics();
     loadLeaderboard();
-    loadStats();
-  }, [referralService]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const loadProspects = async () => {
     try {
       const data = await referralService.getProspects(userData?.id, userRole);
       setProspects(data);
     } catch (error) {
-      console.error('Error loading prospects:', error);
+      // Error loading prospects
     }
   };
 
@@ -441,7 +410,7 @@ const AdvancedReferralCRM = ({ userRole, userData, userScope }) => {
       });
       setAnalytics(data);
     } catch (error) {
-      console.error('Error loading analytics:', error);
+      // Error loading analytics
     }
   };
 
@@ -450,16 +419,7 @@ const AdvancedReferralCRM = ({ userRole, userData, userScope }) => {
       const data = await referralService.getReferralLeaderboard('program', 'program-1');
       setLeaderboard(data);
     } catch (error) {
-      console.error('Error loading leaderboard:', error);
-    }
-  };
-
-  const loadStats = async () => {
-    try {
-      const data = await referralService.getReferralStats(userData?.id, userRole);
-      setStats(data);
-    } catch (error) {
-      console.error('Error loading stats:', error);
+      // Error loading leaderboard
     }
   };
 
@@ -487,31 +447,11 @@ const AdvancedReferralCRM = ({ userRole, userData, userScope }) => {
     }).format(amount);
   };
 
-  const formatNumber = (num) => {
-    return new Intl.NumberFormat('en-US').format(num);
-  };
-
-  const handleStageUpdate = async (prospectId, newStage) => {
-    setLoading(true);
-    try {
-      await referralService.updateProspectStage(prospectId, newStage);
-      await loadProspects();
-      setShowStageUpdate(false);
-      setSelectedProspect(null);
-    } catch (error) {
-      console.error('Error updating stage:', error);
-      alert('Error updating prospect stage');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleAddActivity = async (prospectId, activityData) => {
     try {
       await referralService.addProspectActivity(prospectId, activityData);
       await loadProspects();
     } catch (error) {
-      console.error('Error adding activity:', error);
       alert('Error adding activity');
     }
   };
@@ -671,7 +611,6 @@ const AdvancedReferralCRM = ({ userRole, userData, userScope }) => {
                 </div>
                 <div className="flex items-center justify-end">
                   <button
-                    onClick={() => setShowAddProspect(true)}
                     className="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold rounded-xl transition-colors flex items-center gap-2"
                   >
                     <Plus className="w-4 h-4" />
@@ -724,16 +663,11 @@ const AdvancedReferralCRM = ({ userRole, userData, userScope }) => {
                       </div>
                       <div className="flex items-center gap-2 ml-4">
                         <button
-                          onClick={() => setSelectedProspect(prospect)}
                           className="p-2 text-gray-400 hover:text-cyan-600 transition-colors"
                         >
                           <Eye className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => {
-                            setSelectedProspect(prospect);
-                            setShowStageUpdate(true);
-                          }}
                           className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
                         >
                           <Edit className="w-4 h-4" />

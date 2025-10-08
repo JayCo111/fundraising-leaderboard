@@ -1,44 +1,29 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  Trophy, 
-  Users, 
-  Target, 
-  DollarSign, 
-  TrendingUp,
-  Calendar,
-  Settings,
-  Plus,
+import { useState, useMemo } from 'react';
+import {
+  Trophy,
+  Users,
+  Target,
+  DollarSign,
   Edit,
   Eye,
   BarChart3,
   Award,
-  FileText,
-  Download,
   RefreshCw,
-  Filter,
-  Search,
   CheckCircle,
   AlertCircle,
-  Clock,
   Star,
   UserPlus,
   MessageSquare,
-  Bell,
-  Crown,
-  Medal,
-  Zap,
-  Shield,
-  Heart
+  Heart,
+  Clock
 } from 'lucide-react';
 import MessagingCenter from './MessagingCenter';
 import AdvancedReferralCRM from './AdvancedReferralCRM';
 
-const HeadCoachDashboard = ({ userData, teamData, programData }) => {
+const HeadCoachDashboard = ({ userData, teamData }) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [dateRange, setDateRange] = useState('30d');
-  const [loading, setLoading] = useState(false);
   const [showAddAthlete, setShowAddAthlete] = useState(false);
-  const [selectedAthlete, setSelectedAthlete] = useState(null);
 
   // Mock data for athletes and team performance
   const mockAthletes = useMemo(() => [
@@ -120,7 +105,7 @@ const HeadCoachDashboard = ({ userData, teamData, programData }) => {
     }
   ], []);
 
-  const [athletes, setAthletes] = useState(mockAthletes);
+  const athletes = mockAthletes;
 
   const teamStats = useMemo(() => {
     const activeAthletes = athletes.filter(a => a.status === 'ACTIVE');
@@ -221,9 +206,8 @@ const HeadCoachDashboard = ({ userData, teamData, programData }) => {
     setShowAddAthlete(false);
   };
 
-  const handleSendMessage = (athleteId) => {
+  const handleSendMessage = () => {
     // Implementation for sending message to athlete
-    console.log('Sending message to athlete:', athleteId);
   };
 
   return (
@@ -473,7 +457,6 @@ const HeadCoachDashboard = ({ userData, teamData, programData }) => {
                       </div>
                       <div className="flex items-center gap-2 ml-4">
                         <button
-                          onClick={() => setSelectedAthlete(athlete)}
                           className="p-2 text-gray-400 hover:text-cyan-600 transition-colors"
                         >
                           <Eye className="w-4 h-4" />
@@ -485,7 +468,6 @@ const HeadCoachDashboard = ({ userData, teamData, programData }) => {
                           <MessageSquare className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => setSelectedAthlete(athlete)}
                           className="p-2 text-gray-400 hover:text-emerald-600 transition-colors"
                         >
                           <Edit className="w-4 h-4" />

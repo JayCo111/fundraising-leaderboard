@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Send,
   Mail,
@@ -6,14 +6,7 @@ import {
   Users,
   Clock,
   CheckCircle,
-  AlertCircle,
   Search,
-  Filter,
-  Plus,
-  Edit,
-  Trash2,
-  Eye,
-  Calendar,
   BarChart3,
   Phone,
   User,
@@ -21,8 +14,7 @@ import {
   UserPlus,
   Target,
   TrendingUp,
-  FileText,
-  Download
+  FileText
 } from 'lucide-react';
 import { MessageService, MESSAGE_TYPES, MESSAGE_TEMPLATES, MESSAGING_PERMISSIONS } from '../services/MessageService';
 import { Role } from '../types';
@@ -86,8 +78,6 @@ const MessagingCenter = ({ userRole, userData, userScope }) => {
       }
 
       async post(url, data) {
-        console.log('Mock API POST:', url, data);
-        
         if (url.includes('/messages')) {
           const message = {
             id: `msg-${Date.now()}`,
@@ -106,8 +96,6 @@ const MessagingCenter = ({ userRole, userData, userScope }) => {
       }
 
       async get(url) {
-        console.log('Mock API GET:', url);
-        
         if (url.includes('/recipients')) {
           return { data: this.recipients };
         }
@@ -137,7 +125,6 @@ const MessagingCenter = ({ userRole, userData, userScope }) => {
       }
 
       async delete(url) {
-        console.log('Mock API DELETE:', url);
         return { data: { success: true } };
       }
     })();
@@ -162,14 +149,15 @@ const MessagingCenter = ({ userRole, userData, userScope }) => {
   useEffect(() => {
     loadRecipients();
     loadMessageHistory();
-  }, [messageService]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const loadRecipients = async () => {
     try {
       const data = await messageService.getRecipients(userRole, userScope);
       setRecipients(data);
     } catch (error) {
-      console.error('Error loading recipients:', error);
+      // Error loading recipients
     }
   };
 
@@ -178,7 +166,7 @@ const MessagingCenter = ({ userRole, userData, userScope }) => {
       const data = await messageService.getMessageHistory(userData?.id);
       setMessageHistory(data);
     } catch (error) {
-      console.error('Error loading message history:', error);
+      // Error loading message history
     }
   };
 
@@ -190,7 +178,7 @@ const MessagingCenter = ({ userRole, userData, userScope }) => {
       });
       setAnalytics(data);
     } catch (error) {
-      console.error('Error loading analytics:', error);
+      // Error loading analytics
     }
   };
 
@@ -227,10 +215,9 @@ const MessagingCenter = ({ userRole, userData, userScope }) => {
       
       // Reload history
       await loadMessageHistory();
-      
+
       alert('Message sent successfully!');
     } catch (error) {
-      console.error('Error sending message:', error);
       alert(`Error sending message: ${error.message}`);
     } finally {
       setLoading(false);

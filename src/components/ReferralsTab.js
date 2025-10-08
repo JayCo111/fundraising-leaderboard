@@ -1,6 +1,6 @@
 // src/components/ReferralsTab.js
-import React, { useState } from 'react';
-import { UserPlus, Phone, Mail, Building, CheckCircle, Clock, Star, Target } from 'lucide-react';
+import { useState } from 'react';
+import { UserPlus, Phone, Mail, CheckCircle, Clock, Star, Target } from 'lucide-react';
 
 const ReferralsTab = ({ currentStudent }) => {
   const [showAddForm, setShowAddForm] = useState(false);
@@ -70,7 +70,7 @@ const ReferralsTab = ({ currentStudent }) => {
       });
       setShowAddForm(false);
     } catch (error) {
-      console.error('Error adding prospect:', error);
+      // Error handled silently
     } finally {
       setIsSubmitting(false);
     }

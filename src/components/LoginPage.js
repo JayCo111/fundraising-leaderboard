@@ -10,13 +10,12 @@
  * - Column F: Email (ParentEmail)
  */
 
-import React, { useState, useEffect } from 'react';
-import { Trophy, User, Mail, Lock, AlertCircle, CheckCircle, Loader, Eye, EyeOff, Shield, LogIn } from 'lucide-react';
-import { GOOGLE_SHEETS_CONFIG } from '../config/googleSheets';
-import { 
-  validatePasswordStrength, 
-  passwordStorage, 
-  generateSecurePassword 
+import { useState } from 'react';
+import { Trophy, Mail, Lock, AlertCircle, CheckCircle, Loader, Eye, EyeOff, Shield, LogIn } from 'lucide-react';
+import {
+  validatePasswordStrength,
+  passwordStorage,
+  generateSecurePassword
 } from '../utils/passwordSecurity';
 
 const LoginPage = ({ onLogin, studentsData, loading }) => {

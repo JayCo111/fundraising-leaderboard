@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import {
   FileText,
   Download,
@@ -7,37 +7,24 @@ import {
   Calendar,
   User,
   Activity,
-  Eye,
-  RefreshCw,
-  Settings,
   BarChart3,
-  PieChart,
-  LineChart,
-  TrendingUp,
   AlertCircle,
   CheckCircle,
   Clock,
   Database,
   Shield,
-  Lock,
-  Unlock,
+  Settings,
   Edit,
-  Trash2,
   Plus,
-  Minus,
-  ArrowUp,
-  ArrowDown,
-  ExternalLink,
   DollarSign,
   Users,
   MessageSquare,
   Gift,
-  Copy,
   Share2
 } from 'lucide-react';
 import { Role } from '../types';
 
-const AuditExports = ({ userRole, userData, userScope }) => {
+const AuditExports = () => {
   const [activeTab, setActiveTab] = useState('audit');
   const [searchTerm, setSearchTerm] = useState('');
   const [dateFilter, setDateFilter] = useState('');
@@ -212,7 +199,7 @@ const AuditExports = ({ userRole, userData, userScope }) => {
     }
   ], []);
 
-  const [auditLogs, setAuditLogs] = useState(mockAuditLogs);
+  const auditLogs = mockAuditLogs;
 
   const filteredLogs = useMemo(() => {
     return auditLogs.filter(log => {
@@ -318,7 +305,6 @@ const AuditExports = ({ userRole, userData, userScope }) => {
       setShowExportModal(false);
       alert('Export completed successfully!');
     } catch (error) {
-      console.error('Error exporting data:', error);
       alert('Error exporting data');
     } finally {
       setLoading(false);

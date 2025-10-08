@@ -258,7 +258,6 @@ export class MessageService {
       const response = await this.apiClient.post('/api/v1/messages', payload);
       return response.data;
     } catch (error) {
-      console.error('Error sending message:', error);
       throw error;
     }
   }
@@ -274,7 +273,6 @@ export class MessageService {
       const response = await this.apiClient.get(`/api/v1/messages/history/${userId}?${params}`);
       return response.data;
     } catch (error) {
-      console.error('Error fetching message history:', error);
       throw error;
     }
   }
@@ -291,7 +289,6 @@ export class MessageService {
       const response = await this.apiClient.get(`/api/v1/messages/recipients?${params}`);
       return response.data;
     } catch (error) {
-      console.error('Error fetching recipients:', error);
       throw error;
     }
   }
@@ -310,7 +307,6 @@ export class MessageService {
       const response = await this.apiClient.delete(`/api/v1/messages/scheduled/${messageId}`);
       return response.data;
     } catch (error) {
-      console.error('Error canceling scheduled message:', error);
       throw error;
     }
   }
@@ -327,7 +323,6 @@ export class MessageService {
       const response = await this.apiClient.get(`/api/v1/messages/analytics?${params}`);
       return response.data;
     } catch (error) {
-      console.error('Error fetching message analytics:', error);
       throw error;
     }
   }
@@ -361,8 +356,6 @@ export class MockApiClient {
   }
 
   async post(url, data) {
-    console.log('Mock API POST:', url, data);
-    
     if (url.includes('/messages')) {
       const message = {
         id: `msg-${Date.now()}`,
@@ -373,21 +366,19 @@ export class MockApiClient {
       this.messages.push(message);
       return { data: message };
     }
-    
+
     return { data: { success: true } };
   }
 
   async get(url) {
-    console.log('Mock API GET:', url);
-    
     if (url.includes('/recipients')) {
       return { data: this.recipients };
     }
-    
+
     if (url.includes('/history')) {
       return { data: this.messages.slice(-10) };
     }
-    
+
     if (url.includes('/analytics')) {
       return {
         data: {
@@ -400,12 +391,11 @@ export class MockApiClient {
         }
       };
     }
-    
+
     return { data: [] };
   }
 
   async delete(url) {
-    console.log('Mock API DELETE:', url);
     return { data: { success: true } };
   }
 }

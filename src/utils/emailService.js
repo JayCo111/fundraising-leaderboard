@@ -1,18 +1,9 @@
 /**
  * Email Service Utility
- * 
+ *
  * Handles sending personalized registration emails to parents
  * with pre-populated student data and personalized links.
  */
-
-// Email service configuration
-const EMAIL_CONFIG = {
-  // In production, use a real email service like SendGrid, Mailgun, or AWS SES
-  SERVICE_URL: process.env.REACT_APP_EMAIL_SERVICE_URL || 'https://api.emailjs.com/api/v1.0/email/send',
-  SERVICE_ID: process.env.REACT_APP_EMAILJS_SERVICE_ID || 'your_service_id',
-  TEMPLATE_ID: process.env.REACT_APP_EMAILJS_TEMPLATE_ID || 'your_template_id',
-  PUBLIC_KEY: process.env.REACT_APP_EMAILJS_PUBLIC_KEY || 'your_public_key'
-};
 
 /**
  * Creates a personalized registration email template
@@ -146,21 +137,13 @@ export const createRegistrationEmail = (studentData, registrationLink) => {
 export const sendRegistrationEmail = async (studentData, registrationLink) => {
   try {
     const emailData = createRegistrationEmail(studentData, registrationLink);
-    
+
     // For demo purposes, we'll simulate sending the email
     // In production, integrate with a real email service
-    console.log('📧 Registration Email Prepared:', {
-      to: emailData.to_email,
-      subject: emailData.subject,
-      student: `${emailData.first_name} ${emailData.last_name}`,
-      registrationLink: emailData.registration_link,
-      personalLink: emailData.personal_link,
-      qrCodeUrl: emailData.qr_code_url
-    });
-    
+
     // Simulate email sending delay
     await new Promise(resolve => setTimeout(resolve, 1000));
-    
+
     // In production, replace this with actual email service call:
     /*
     const response = await fetch(EMAIL_CONFIG.SERVICE_URL, {
@@ -175,20 +158,19 @@ export const sendRegistrationEmail = async (studentData, registrationLink) => {
         template_params: emailData
       })
     });
-    
+
     if (!response.ok) {
       throw new Error(`Email service error: ${response.status}`);
     }
     */
-    
+
     return {
       success: true,
       message: `Registration email sent successfully to ${emailData.to_email}`,
       emailData
     };
-    
+
   } catch (error) {
-    console.error('Error sending registration email:', error);
     return {
       success: false,
       error: error.message || 'Failed to send registration email'

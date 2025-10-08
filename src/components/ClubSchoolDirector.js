@@ -1,38 +1,26 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  Building, 
-  Users, 
-  Target, 
-  DollarSign, 
-  TrendingUp,
-  Calendar,
-  Settings,
+import { useState, useMemo } from 'react';
+import {
+  Building,
+  Users,
+  Target,
+  DollarSign,
   Plus,
   Edit,
   Eye,
   BarChart3,
   Award,
   FileText,
-  Download,
   RefreshCw,
-  Filter,
-  Search,
   CheckCircle,
   AlertCircle,
   Clock,
-  Star,
-  Trophy,
-  UserPlus,
-  MessageSquare,
-  Bell
+  Trophy
 } from 'lucide-react';
 
 const ClubSchoolDirector = ({ userData, organizationData }) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [dateRange, setDateRange] = useState('30d');
-  const [loading, setLoading] = useState(false);
   const [showAddProgram, setShowAddProgram] = useState(false);
-  const [selectedProgram, setSelectedProgram] = useState(null);
 
   // Mock data for programs and campaigns
   const mockPrograms = useMemo(() => [
@@ -97,7 +85,7 @@ const ClubSchoolDirector = ({ userData, organizationData }) => {
     }
   ], []);
 
-  const [programs, setPrograms] = useState(mockPrograms);
+  const programs = mockPrograms;
 
   const organizationStats = useMemo(() => {
     const totalPrograms = programs.length;
@@ -160,9 +148,8 @@ const ClubSchoolDirector = ({ userData, organizationData }) => {
     setShowAddProgram(false);
   };
 
-  const handleLaunchCampaign = (programId) => {
+  const handleLaunchCampaign = () => {
     // Implementation for launching campaign
-    console.log('Launching campaign for program:', programId);
   };
 
   return (
@@ -365,13 +352,11 @@ const ClubSchoolDirector = ({ userData, organizationData }) => {
                       </div>
                       <div className="flex items-center gap-2 ml-4">
                         <button
-                          onClick={() => setSelectedProgram(program)}
                           className="p-2 text-gray-400 hover:text-cyan-600 transition-colors"
                         >
                           <Eye className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => setSelectedProgram(program)}
                           className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
                         >
                           <Edit className="w-4 h-4" />

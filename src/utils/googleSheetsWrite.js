@@ -45,10 +45,9 @@ export const saveReferral = async (referralData) => {
       throw new Error(result.error || 'Failed to save referral');
     }
   } catch (error) {
-    console.error('Error saving referral:', error);
-    return { 
-      success: false, 
-      error: error.message || 'Failed to save referral. Please try again.' 
+    return {
+      success: false,
+      error: error.message || 'Failed to save referral. Please try again.'
     };
   }
 };
@@ -86,10 +85,9 @@ export const updateReferral = async (referralId, updateData) => {
       throw new Error(result.error || 'Failed to update referral');
     }
   } catch (error) {
-    console.error('Error updating referral:', error);
-    return { 
-      success: false, 
-      error: error.message || 'Failed to update referral. Please try again.' 
+    return {
+      success: false,
+      error: error.message || 'Failed to update referral. Please try again.'
     };
   }
 };

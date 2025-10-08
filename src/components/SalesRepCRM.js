@@ -1,16 +1,13 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  UserPlus, 
-  Phone, 
-  Mail, 
-  Building, 
-  Calendar,
+import { useState, useMemo } from 'react';
+import {
+  Phone,
+  Mail,
+  Building,
   Filter,
   Search,
   Plus,
   Edit,
   Trash2,
-  Eye,
   CheckCircle,
   Clock,
   AlertCircle,
@@ -19,9 +16,9 @@ import {
   DollarSign,
   Users,
   MessageSquare,
-  Send,
   FileText,
-  Download
+  Download,
+  Eye
 } from 'lucide-react';
 import MessagingCenter from './MessagingCenter';
 import AdvancedReferralCRM from './AdvancedReferralCRM';
@@ -31,9 +28,6 @@ const SalesRepCRM = ({ userData, territoryData }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [showAddProspect, setShowAddProspect] = useState(false);
-  const [selectedProspect, setSelectedProspect] = useState(null);
-  const [showMessaging, setShowMessaging] = useState(false);
-  const [loading, setLoading] = useState(false);
 
   // Mock prospect data
   const mockProspects = useMemo(() => [
@@ -221,11 +215,6 @@ const SalesRepCRM = ({ userData, territoryData }) => {
       territory: territoryData?.name || 'Northern CA'
     });
     setShowAddProspect(false);
-  };
-
-  const handleUpdateProspect = (updatedProspect) => {
-    setProspects(prev => prev.map(p => p.id === updatedProspect.id ? updatedProspect : p));
-    setSelectedProspect(null);
   };
 
   const handleDeleteProspect = (prospectId) => {
@@ -439,13 +428,11 @@ const SalesRepCRM = ({ userData, territoryData }) => {
                       </div>
                       <div className="flex items-center gap-2 ml-4">
                         <button
-                          onClick={() => setSelectedProspect(prospect)}
                           className="p-2 text-gray-400 hover:text-cyan-600 transition-colors"
                         >
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => setShowMessaging(true)}
                           className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
                         >
                           <MessageSquare className="w-4 h-4" />

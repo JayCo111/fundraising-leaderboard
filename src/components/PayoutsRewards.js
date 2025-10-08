@@ -1,14 +1,12 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import {
   DollarSign,
   Gift,
   Award,
   Users,
-  TrendingUp,
   Calendar,
   Settings,
   Plus,
-  Edit,
   Eye,
   BarChart3,
   CheckCircle,
@@ -17,29 +15,19 @@ import {
   Star,
   Trophy,
   Target,
-  FileText,
   Download,
-  Filter,
-  Search,
   CreditCard,
   Banknote,
   Coins,
-  Sparkles,
-  Crown,
-  Medal,
-  Zap,
-  Heart,
-  Package
+  TrendingUp
 } from 'lucide-react';
 import { Role } from '../types';
 
-const PayoutsRewards = ({ userRole, userData, userScope }) => {
+const PayoutsRewards = () => {
   const [activeTab, setActiveTab] = useState('payouts');
   const [loading, setLoading] = useState(false);
   const [showAddPayout, setShowAddPayout] = useState(false);
   const [showAddReward, setShowAddReward] = useState(false);
-  const [selectedPayout, setSelectedPayout] = useState(null);
-  const [selectedReward, setSelectedReward] = useState(null);
 
   // Mock data for payouts
   const mockPayouts = useMemo(() => [
@@ -287,17 +275,6 @@ const PayoutsRewards = ({ userRole, userData, userScope }) => {
     }
   };
 
-  const getRewardTypeIcon = (type) => {
-    switch (type) {
-      case 'DIGITAL_BADGE': return <Award className="w-4 h-4" />;
-      case 'DIGITAL_CERTIFICATE': return <FileText className="w-4 h-4" />;
-      case 'RECOGNITION': return <Star className="w-4 h-4" />;
-      case 'GIFT_CARD': return <Gift className="w-4 h-4" />;
-      case 'PHYSICAL_ITEM': return <Package className="w-4 h-4" />;
-      default: return <Gift className="w-4 h-4" />;
-    }
-  };
-
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -323,10 +300,9 @@ const PayoutsRewards = ({ userRole, userData, userScope }) => {
             }
           : payout
       ));
-      
+
       alert('Payout processed successfully!');
     } catch (error) {
-      console.error('Error processing payout:', error);
       alert('Error processing payout');
     } finally {
       setLoading(false);
@@ -508,7 +484,6 @@ const PayoutsRewards = ({ userRole, userData, userScope }) => {
                       </div>
                       <div className="flex items-center gap-2 ml-4">
                         <button
-                          onClick={() => setSelectedPayout(payout)}
                           className="p-2 text-gray-400 hover:text-cyan-600 transition-colors"
                         >
                           <Eye className="w-4 h-4" />

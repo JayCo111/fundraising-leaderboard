@@ -164,7 +164,6 @@ export class ReferralCRMService {
       const response = await this.apiClient.get(`/api/v1/referrals/prospects?${params}`);
       return response.data;
     } catch (error) {
-      console.error('Error fetching prospects:', error);
       throw error;
     }
   }
@@ -175,7 +174,6 @@ export class ReferralCRMService {
       const response = await this.apiClient.post('/api/v1/referrals/prospects', prospectData);
       return response.data;
     } catch (error) {
-      console.error('Error adding prospect:', error);
       throw error;
     }
   }
@@ -190,7 +188,6 @@ export class ReferralCRMService {
       });
       return response.data;
     } catch (error) {
-      console.error('Error updating prospect stage:', error);
       throw error;
     }
   }
@@ -204,7 +201,6 @@ export class ReferralCRMService {
       });
       return response.data;
     } catch (error) {
-      console.error('Error adding prospect activity:', error);
       throw error;
     }
   }
@@ -222,7 +218,6 @@ export class ReferralCRMService {
       const response = await this.apiClient.get(`/api/v1/referrals/analytics?${params}`);
       return response.data;
     } catch (error) {
-      console.error('Error fetching referral analytics:', error);
       throw error;
     }
   }
@@ -239,7 +234,6 @@ export class ReferralCRMService {
       const response = await this.apiClient.get(`/api/v1/referrals/leaderboard?${params}`);
       return response.data;
     } catch (error) {
-      console.error('Error fetching referral leaderboard:', error);
       throw error;
     }
   }
@@ -297,7 +291,6 @@ export class ReferralCRMService {
       const response = await this.apiClient.get(`/api/v1/referrals/stats/${userId}?role=${userRole}`);
       return response.data;
     } catch (error) {
-      console.error('Error fetching referral stats:', error);
       throw error;
     }
   }
@@ -317,7 +310,6 @@ export class ReferralCRMService {
       });
       return response.data;
     } catch (error) {
-      console.error('Error exporting referral data:', error);
       throw error;
     }
   }
@@ -481,12 +473,10 @@ export class MockReferralApiClient {
   }
 
   async get(url) {
-    console.log('Mock Referral API GET:', url);
-    
     if (url.includes('/prospects')) {
       return { data: this.prospects };
     }
-    
+
     if (url.includes('/analytics')) {
       return {
         data: {
@@ -510,7 +500,7 @@ export class MockReferralApiClient {
         }
       };
     }
-    
+
     if (url.includes('/leaderboard')) {
       return {
         data: [
@@ -520,7 +510,7 @@ export class MockReferralApiClient {
         ]
       };
     }
-    
+
     if (url.includes('/stats')) {
       return {
         data: {
@@ -532,13 +522,11 @@ export class MockReferralApiClient {
         }
       };
     }
-    
+
     return { data: [] };
   }
 
   async post(url, data) {
-    console.log('Mock Referral API POST:', url, data);
-    
     if (url.includes('/prospects')) {
       const prospect = {
         id: `prospect-${Date.now()}`,
@@ -550,7 +538,7 @@ export class MockReferralApiClient {
       this.prospects.push(prospect);
       return { data: prospect };
     }
-    
+
     if (url.includes('/activities')) {
       const activity = {
         id: `activity-${Date.now()}`,
@@ -559,13 +547,11 @@ export class MockReferralApiClient {
       this.activities.push(activity);
       return { data: activity };
     }
-    
+
     return { data: { success: true } };
   }
 
   async put(url, data) {
-    console.log('Mock Referral API PUT:', url, data);
-    
     if (url.includes('/stage')) {
       const prospectId = url.split('/')[4];
       const prospect = this.prospects.find(p => p.id === prospectId);
@@ -575,7 +561,7 @@ export class MockReferralApiClient {
       }
       return { data: { success: true } };
     }
-    
+
     return { data: { success: true } };
   }
 }

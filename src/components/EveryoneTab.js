@@ -1,5 +1,4 @@
 // src/components/EveryoneTab.js
-import React from 'react';
 import { Trophy, Users, Target, TrendingUp, Award, Star } from 'lucide-react';
 
 const EveryoneTab = ({ studentsWithTeamStats, currentStudent }) => {

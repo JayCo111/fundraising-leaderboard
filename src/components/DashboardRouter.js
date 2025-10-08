@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Role } from '../types';
 import DirectorDashboard from './DirectorDashboard';
 import SalesRepCRM from './SalesRepCRM';
 import ClubSchoolDirector from './ClubSchoolDirector';
 import HeadCoachDashboard from './HeadCoachDashboard';
-import LoginPage from './LoginPage';
 
 const DashboardRouter = () => {
   const [currentUser, setCurrentUser] = useState(null);
@@ -206,7 +205,14 @@ const DashboardRouter = () => {
   }
 
   if (!currentUser) {
-    return <LoginPage />;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Please Log In</h1>
+          <p className="text-gray-600">You need to log in to access the dashboard.</p>
+        </div>
+      </div>
+    );
   }
 
   const userScope = getUserScope(currentUser);

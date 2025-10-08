@@ -1,6 +1,5 @@
 // src/components/TeamVsTeamTab.js
-import React from 'react';
-import { Trophy, Users, Target, TrendingUp, Award } from 'lucide-react';
+import { Trophy, Award } from 'lucide-react';
 
 const TeamVsTeamTab = ({ currentStudent, studentsWithTeamStats }) => {
   if (!currentStudent) return null;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   BarChart3,
   TrendingUp,
@@ -7,13 +7,8 @@ import {
   Target,
   Award,
   Building,
-  MapPin,
-  Calendar,
-  Filter,
   Download,
   RefreshCw,
-  Eye,
-  Settings,
   MessageSquare,
   Gift,
   Shield
@@ -26,7 +21,6 @@ import AuditExports from './AuditExports';
 const DirectorDashboard = ({ userRole, userScope, userData }) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [dateRange, setDateRange] = useState('30d');
-  const [scopeFilter, setScopeFilter] = useState('');
   const [loading, setLoading] = useState(false);
   const [dashboardData, setDashboardData] = useState(null);
 
@@ -130,7 +124,7 @@ const DirectorDashboard = ({ userRole, userScope, userData }) => {
       setDashboardData(mockDashboardData);
       setLoading(false);
     }, 1000);
-  }, [dateRange, scopeFilter, mockDashboardData]);
+  }, [dateRange, mockDashboardData]);
 
   const getRoleTitle = () => {
     switch (userRole) {

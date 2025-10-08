@@ -6,8 +6,8 @@
  * and custom image uploads.
  */
 
-import React, { useState, useRef } from 'react';
-import { User, Camera, Upload, Save, X, Edit3, Check } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { User, Camera, Upload, Save, X, Edit3 } from 'lucide-react';
 
 const ProfilePage = ({ currentStudent, onUpdateProfile }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -78,7 +78,6 @@ const ProfilePage = ({ currentStudent, onUpdateProfile }) => {
       };
       reader.readAsDataURL(file);
     } catch (error) {
-      console.error('Error uploading image:', error);
       alert('Error uploading image. Please try again.');
       setIsUploading(false);
     }
