@@ -1,29 +1,46 @@
 {
-  "name": "fundraising-app",
-  "version": "0.1.0",
+  "name": "sportsraiser-platform",
+  "version": "1.0.0",
+  "description": "Complete SportsRaiser platform with RBAC, dashboards, and multi-role support",
   "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "start": "GENERATE_SOURCEMAP=false react-scripts start",
+    "start:fast": "FAST_REFRESH=true GENERATE_SOURCEMAP=false react-scripts start",
+    "start:analyze": "ANALYZE=true react-scripts start",
+    "build": "react-scripts build",
+    "build:analyze": "ANALYZE=true react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "lint": "eslint src --ext .js,.jsx --fix",
+    "lint:check": "eslint src --ext .js,.jsx",
+    "format": "prettier --write src/**/*.{js,jsx,json,css,md}",
+    "clean": "rimraf build node_modules/.cache",
+    "precommit": "npm run lint:check && npm run format"
+  },
   "dependencies": {
-    "@testing-library/dom": "^10.4.1",
-    "@testing-library/jest-dom": "^6.9.1",
-    "@testing-library/react": "^16.3.0",
+    "@testing-library/jest-dom": "^5.17.0",
+    "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
-    "lucide-react": "^0.544.0",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
+    "lucide-react": "^0.303.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "react-scripts": "5.0.1",
     "web-vitals": "^2.1.4"
   },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "typescript": "^4.9.5",
+    "@types/node": "^20.10.0",
+    "eslint": "^8.57.0",
+    "eslint-config-react-app": "^7.0.1",
+    "prettier": "^3.1.0",
+    "rimraf": "^5.0.5",
+    "webpack-bundle-analyzer": "^4.10.1",
+    "react-refresh": "^0.14.0",
+    "terser-webpack-plugin": "^5.3.9"
   },
   "browserslist": {
     "production": [

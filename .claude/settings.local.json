@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run lint:check:*)",
+      "Bash(npm run lint)",
+      "Bash(Select-Object -First 100)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
