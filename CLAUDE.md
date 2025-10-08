@@ -15,29 +15,11 @@ npm run start:fast        # Start with Fast Refresh enabled
 npm run start:analyze     # Start with bundle analyzer
 ```
 
-### Monorepo (Workspaces)
-```bash
-npm run dev              # Run web + api concurrently
-npm run dev:web          # Run web package only
-npm run dev:api          # Run api package only
-```
-
 ### Build & Testing
 ```bash
-npm run build            # Build both web and api
-npm run build:web        # Build web package
-npm run build:api        # Build api package
+npm run build            # Build production bundle
 npm run build:analyze    # Build with bundle size analysis
-npm test                 # Run all tests
-npm run test:web         # Test web package
-npm run test:api         # Test api package
-```
-
-### Database (Workspaces)
-```bash
-npm run db:migrate       # Run database migrations
-npm run db:seed          # Seed database with test data
-npm run db:reset         # Reset database
+npm test                 # Run tests in watch mode
 ```
 
 ### Code Quality
@@ -140,13 +122,15 @@ The project uses **CRACO** (`craco.config.js`) for custom webpack configuration:
 - Points awarded per referral (configurable)
 - `TotalRewards = NetRaised + ReferralPoints`
 
-### Monorepo Structure
-- **packages/web** - Frontend React app
-- **packages/api** - Backend API services
-- **packages/db** - Database migrations and models
-- **packages/core** - Shared types and utilities
-- **packages/infra** - Infrastructure as code
-- **packages/workers** - Background job workers
+### Project Structure
+- **src/** - Main React application
+  - **components/** - React components including dashboards for different roles
+  - **config/** - Configuration files (Google Sheets, etc.)
+  - **services/** - Business logic services (MessageService, ReferralCRMService)
+  - **utils/** - Utility functions (Google Sheets write, email, password security)
+  - **types/** - TypeScript/JavaScript type definitions
+- **packages/** - Future monorepo packages (api, db, core planned but not implemented)
+  - Contains placeholder structure and type definitions for future backend services
 
 ## ESLint Rules
 - Modern JS required: `prefer-const`, `no-var`, `arrow-spacing`
