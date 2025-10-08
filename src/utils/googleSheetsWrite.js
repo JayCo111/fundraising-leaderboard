@@ -69,7 +69,7 @@ export const updateReferral = async (referralId, updateData) => {
       body: JSON.stringify({
         action: 'updateReferral',
         sheetId: GOOGLE_SHEETS_WRITE_CONFIG.SHEET_ID,
-        referralId: referralId,
+        referralId,
         data: updateData
       })
     });

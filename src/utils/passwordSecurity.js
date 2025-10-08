@@ -8,7 +8,7 @@
 // Simple crypto hash function (in production, use a proper library like bcrypt)
 const simpleHash = async (password) => {
   const encoder = new TextEncoder();
-  const data = encoder.encode(password + 'fundraising_salt_2024');
+  const data = encoder.encode(`${password}fundraising_salt_2024`);
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');

@@ -17,6 +17,11 @@ import { GOOGLE_SHEETS_CONFIG } from './config/googleSheets';
 import { saveReferral, validateReferralForm } from './utils/googleSheetsWrite';
 import LoginPage from './components/LoginPage';
 import ProfilePage from './components/ProfilePage';
+import MyTeamTab from './components/MyTeamTab';
+import TeamVsTeamTab from './components/TeamVsTeamTab';
+import EveryoneTab from './components/EveryoneTab';
+import ReferralsTab from './components/ReferralsTab';
+import DashboardDemo from './components/DashboardDemo';
 
 const FundraisingApp = () => {
   const [studentsData, setStudentsData] = useState([]);
@@ -32,6 +37,7 @@ const FundraisingApp = () => {
   const [teamFilter, setTeamFilter] = useState('');
   const [programFilter, setProgramFilter] = useState('');
   const [showReferralForm, setShowReferralForm] = useState(false);
+  const [showPlatformDemo, setShowPlatformDemo] = useState(false);
   
   // Referral form state
   const [referralFormData, setReferralFormData] = useState({
@@ -535,6 +541,11 @@ const programsJson = await programsResponse.json();
     );
   }
 
+  // Show platform demo if requested
+  if (showPlatformDemo) {
+    return <DashboardDemo />;
+  }
+
   // Show login page if not authenticated
   if (!isAuthenticated) {
     return <LoginPage onLogin={handleLogin} studentsData={studentsWithTeamStats} loading={loading} />;
@@ -552,13 +563,22 @@ const programsJson = await programsResponse.json();
             <div className="text-sm opacity-90">
               Signed in as: {currentStudent?.ParentEmail}
             </div>
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-2 px-3 py-1 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg transition-all"
-            >
-              <LogOut className="w-4 h-4" />
-              Logout
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowPlatformDemo(true)}
+                className="flex items-center gap-2 px-3 py-1 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg transition-all"
+              >
+                <Trophy className="w-4 h-4" />
+                Platform Demo
+              </button>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-3 py-1 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg transition-all"
+              >
+                <LogOut className="w-4 h-4" />
+                Logout
+              </button>
+            </div>
           </div>
           {error && (
             <div className="mt-3 bg-yellow-500 bg-opacity-20 border border-yellow-300 rounded-lg p-3 flex items-start gap-2">
@@ -708,193 +728,23 @@ const programsJson = await programsResponse.json();
         )}
 
         {activeTab === 'myteam' && currentStudent && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-gradient-to-br from-cyan-400 to-blue-500 rounded-2xl shadow-2xl shadow-cyan-500/50 p-6 border-2 border-cyan-300 transform hover:scale-105 transition-transform">
-                <div className="text-sm font-black text-white mb-2 drop-shadow">Team Total Raised</div>
-                <div className="text-4xl font-black text-white drop-shadow-lg">${currentStudent.Team_Net}</div>
-              </div>
-              <div className="bg-gradient-to-br from-blue-400 to-fuchsia-500 rounded-2xl shadow-2xl shadow-blue-500/50 p-6 border-2 border-blue-300 transform hover:scale-105 transition-transform">
-                <div className="text-sm font-black text-white mb-2 drop-shadow">Team Cards Sold</div>
-                <div className="text-4xl font-black text-white drop-shadow-lg">{currentStudent.Team_Cards}</div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl shadow-2xl p-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Team: {currentStudent.Team}</h3>
-              <div className="space-y-3">
-                {currentStudent.Rel_TeamMates?.map((teammate) => (
-                  <div
-                    key={teammate.StudentID}
-                    className={`border-2 rounded-lg p-4 transition-all ${
-                      teammate.StudentID === currentStudent.StudentID
-                        ? 'border-cyan-400 bg-cyan-50'
-                        : 'border-gray-200 hover:border-cyan-300'
-                    }`}
-                  >
-                    <div className="flex items-center gap-4">
-                      {teammate.Avatar_URL && (
-                        <img src={teammate.Avatar_URL} alt="Avatar" className="w-12 h-12 rounded-full" />
-                      )}
-                      <div className="flex-1">
-                        <div className="font-semibold text-gray-900 flex items-center gap-2">
-                          {teammate.FullName}
-                          {teammate.Medal && <span className="text-xl">{teammate.Medal}</span>}
-                        </div>
-                        <div className="text-sm text-gray-600">{teammate.CardsSold} cards</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-xl font-bold text-green-600">${teammate.NetRaised}</div>
-                        <div className="text-xs text-gray-500">Team #{teammate.TeamRank}</div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          <MyTeamTab currentStudent={currentStudent} />
         )}
 
         {activeTab === 'everyone' && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-gradient-to-br from-emerald-400 to-green-600 rounded-2xl shadow-2xl shadow-emerald-500/50 p-6 border-2 border-emerald-300 transform hover:scale-105 transition-transform">
-                <div className="text-sm font-black text-white mb-2 drop-shadow">Total Raised</div>
-                <div className="text-4xl font-black text-white drop-shadow-lg">${totalRaised}</div>
-              </div>
-              <div className="bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl shadow-2xl shadow-blue-500/50 p-6 border-2 border-blue-300 transform hover:scale-105 transition-transform">
-                <div className="text-sm font-black text-white mb-2 drop-shadow">Total Cards Sold</div>
-                <div className="text-4xl font-black text-white drop-shadow-lg">{totalCards}</div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl shadow-2xl p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search by name..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
-                  />
-                </div>
-                <div className="relative">
-                  <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <select
-                    value={teamFilter}
-                    onChange={(e) => setTeamFilter(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent appearance-none"
-                  >
-                    <option value="">All Teams</option>
-                    {teams.map(team => (
-                      <option key={team} value={team}>{team}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl shadow-2xl p-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Overall Leaderboard</h3>
-              <div className="space-y-3">
-                {filteredStudents.map((student) => (
-                  <div
-                    key={student.StudentID}
-                    className={`border-2 rounded-lg p-4 transition-all ${
-                      student.ProgressPct >= 1
-                        ? 'border-green-400 bg-green-50'
-                        : 'border-gray-200 hover:border-cyan-300'
-                    }`}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 flex items-center justify-center bg-cyan-100 rounded-full font-bold text-cyan-600">
-                        {student.Medal || `#${student.OverallRank}`}
-                      </div>
-                      {student.Avatar_URL && (
-                        <img src={student.Avatar_URL} alt="Avatar" className="w-12 h-12 rounded-full" />
-                      )}
-                      <div className="flex-1">
-                        <div className="font-semibold text-gray-900 flex items-center gap-2">
-                          {student.FullName}
-                          {student.ProgressPct >= 1 && (
-                            <span className="text-xs bg-green-500 text-white px-2 py-1 rounded-full font-semibold">
-                              Goal Met!
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-sm text-gray-600">Team: {student.Team}</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-xl font-bold text-green-600">${student.NetRaised}</div>
-                        <div className="text-sm text-gray-600">{student.CardsSold} cards</div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          <EveryoneTab studentsWithTeamStats={studentsWithTeamStats} currentStudent={currentStudent} />
         )}
 
-{activeTab === 'teamvsteam' && (
-  <div className="space-y-6">
-    <div className="bg-white rounded-2xl shadow-2xl p-6 border-t-4 border-cyan-400">
-      <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
-        <h3 className="text-2xl font-black bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent flex items-center gap-2">
-          <Target className="w-8 h-8 text-cyan-600" />
-          Team vs Team Rankings
-        </h3>
-        <select
-          value={programFilter}
-          onChange={(e) => setProgramFilter(e.target.value)}
-          className="px-4 py-2 border-2 border-cyan-300 rounded-xl font-bold text-gray-700 focus:ring-2 focus:ring-cyan-500"
-        >
-          <option value="">All Programs</option>
-          {programs.map(program => (
-            <option key={program} value={program}>{program}</option>
-          ))}
-        </select>
-      </div>
+        {activeTab === 'teamvsteam' && (
+          <TeamVsTeamTab currentStudent={currentStudent} studentsWithTeamStats={studentsWithTeamStats} />
+        )}
 
-      <div className="space-y-4">
-        {teamRankings
-          .filter(team => !programFilter || team.Program === programFilter)
-          .map((team, index) => {
-            const filteredTeams = teamRankings.filter(t => !programFilter || t.Program === programFilter);
-            const previousTeam = index > 0 ? filteredTeams[index - 1] : null;
-            const gap = previousTeam ? previousTeam.TotalRaised - team.TotalRaised : 0;
-            
-            return (
-              <div key={`${team.Team}-${team.Program}`} className="border-3 border-cyan-300 hover:border-cyan-500 hover:shadow-2xl rounded-2xl p-6 transition-all bg-gradient-to-r from-white to-cyan-50 transform hover:scale-105">
-                <div className="flex items-center gap-4 flex-wrap">
-                  <div className="w-16 h-16 flex items-center justify-center bg-gradient-to-br from-cyan-400 to-blue-500 rounded-full font-black text-white text-2xl shadow-xl shadow-cyan-500/50 ring-4 ring-cyan-300">
-                    {team.Medal || `#${team.Rank}`}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-black text-gray-900 text-xl truncate">{team.Team}</div>
-                    <div className="text-sm font-bold text-gray-600">{team.Program} • {team.MemberCount} members</div>
-                    {gap > 0 && (
-                      <div className="text-xs text-orange-600 font-bold mt-1">
-                        ${gap} behind leader
-                      </div>
-                    )}
-                  </div>
-                  <div className="text-right">
-                    <div className="text-3xl font-black text-emerald-600">${team.TotalRaised}</div>
-                    <div className="text-sm font-bold text-gray-600">{team.TotalCards} cards</div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-      </div>
-    </div>
-  </div>
-)}
+        {activeTab === 'referrals' && currentStudent && (
+          <ReferralsTab currentStudent={currentStudent} />
+        )}
 
-{activeTab === 'referrals' && currentStudent && (
+        {/* Original referrals content replaced with new component */}
+        {false && currentStudent && (
   <div className="space-y-6">
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div className="bg-gradient-to-br from-purple-400 to-fuchsia-500 rounded-2xl shadow-2xl shadow-purple-500/50 p-6 border-2 border-purple-300">

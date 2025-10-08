@@ -205,7 +205,7 @@ export const sendRegistrationEmail = async (studentData, registrationLink) => {
 export const generateRegistrationLink = (studentId, studentData) => {
   const baseUrl = window.location.origin;
   const params = new URLSearchParams({
-    studentId: studentId,
+    studentId,
     firstName: studentData.FirstName,
     lastName: studentData.LastName,
     email: studentData.ParentEmail,
