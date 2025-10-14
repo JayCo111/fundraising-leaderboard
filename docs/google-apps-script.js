@@ -14,25 +14,29 @@
 function doPost(e) {
   try {
     const data = JSON.parse(e.postData.contents);
-    const { action, sheetId, data: requestData, referralId } = data;
-    
+    const { action } = data;
+
     let result;
-    
+
     switch (action) {
+      case 'sendMagicLink':
+        result = sendMagicLink(e);
+        break;
+      case 'verifyToken':
+        result = verifyToken(e);
+        break;
       case 'addReferral':
-        result = addReferral(sheetId, requestData);
+        result = addReferral(data.sheetId, data.data);
         break;
       case 'updateReferral':
-        result = updateReferral(sheetId, referralId, requestData);
+        result = updateReferral(data.sheetId, data.referralId, data.data);
         break;
       default:
         throw new Error('Invalid action');
     }
-    
-    return ContentService
-      .createTextOutput(JSON.stringify(result))
-      .setMimeType(ContentService.MimeType.JSON);
-      
+
+    return result;
+
   } catch (error) {
     console.error('Error in doPost:', error);
     return ContentService
@@ -42,6 +46,97 @@ function doPost(e) {
       }))
       .setMimeType(ContentService.MimeType.JSON);
   }
+}
+
+function sendMagicLink(e) {
+  const data = JSON.parse(e.postData.contents);
+  const { email, resendApiKey, sheetId, appUrl } = data;
+
+  // Generate random token
+  const token = Utilities.getUuid();
+  const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 min expiry
+
+  // Save to AuthTokens sheet
+  const sheet = SpreadsheetApp.openById(sheetId).getSheetByName('AuthTokens');
+  sheet.appendRow([token, email, expiresAt.toISOString(), new Date().toISOString(), false]);
+
+  // Send email via Resend
+  const magicLink = `${appUrl}/login?token=${token}`;
+
+  const emailHtml = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #0891b2;">SportsRaiser Login</h2>
+      <p>Click the button below to log in to your fundraising dashboard:</p>
+      <a href="${magicLink}" style="display: inline-block; background: linear-gradient(to right, #0891b2, #2563eb); color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">
+        Log In to SportsRaiser
+      </a>
+      <p style="color: #666; font-size: 12px; margin-top: 20px;">
+        This link expires in 15 minutes. If you didn't request this, ignore this email.
+      </p>
+    </div>
+  `;
+
+  const options = {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${resendApiKey}`,
+      'Content-Type': 'application/json'
+    },
+    payload: JSON.stringify({
+      from: 'SportsRaiser <noreply@yourdomain.com>',
+      to: email,
+      subject: 'Your SportsRaiser Login Link',
+      html: emailHtml
+    })
+  };
+
+  UrlFetchApp.fetch('https://api.resend.com/emails', options);
+
+  return ContentService
+    .createTextOutput(JSON.stringify({ success: true }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function verifyToken(e) {
+  const data = JSON.parse(e.postData.contents);
+  const { token, sheetId } = data;
+
+  const sheet = SpreadsheetApp.openById(sheetId).getSheetByName('AuthTokens');
+  const values = sheet.getDataRange().getValues();
+
+  for (let i = 1; i < values.length; i++) {
+    if (values[i][0] === token) {
+      const expiresAt = new Date(values[i][2]);
+      const used = values[i][4];
+
+      if (used) {
+        return ContentService.createTextOutput(JSON.stringify({
+          success: false,
+          error: 'Token already used'
+        })).setMimeType(ContentService.MimeType.JSON);
+      }
+
+      if (expiresAt < new Date()) {
+        return ContentService.createTextOutput(JSON.stringify({
+          success: false,
+          error: 'Token expired'
+        })).setMimeType(ContentService.MimeType.JSON);
+      }
+
+      // Mark as used
+      sheet.getRange(i + 1, 5).setValue(true);
+
+      return ContentService.createTextOutput(JSON.stringify({
+        success: true,
+        email: values[i][1]
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+  }
+
+  return ContentService.createTextOutput(JSON.stringify({
+    success: false,
+    error: 'Invalid token'
+  })).setMimeType(ContentService.MimeType.JSON);
 }
 
 function addReferral(sheetId, referralData) {
