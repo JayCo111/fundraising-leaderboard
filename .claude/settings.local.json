@@ -3,7 +3,8 @@
     "allow": [
       "Bash(npm run lint:check:*)",
       "Bash(npm run lint)",
-      "Bash(Select-Object -First 100)"
+      "Bash(Select-Object -First 100)",
+      "Bash(npm run build)"
     ],
     "deny": [],
     "ask": []

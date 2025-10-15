@@ -29,8 +29,17 @@ export const config = {
   PAYPAL_WEBHOOK_ID: process.env.PAYPAL_WEBHOOK_ID,
   PAYPAL_MODE: process.env.PAYPAL_MODE || 'sandbox',
   
-  // Email
-  EMAIL_PROVIDER: process.env.EMAIL_PROVIDER || 'smtp',
+  // Google Sheets (Database)
+  GOOGLE_SHEET_ID: process.env.GOOGLE_SHEET_ID || '',
+  GOOGLE_API_KEY: process.env.GOOGLE_API_KEY || '',
+  GOOGLE_SERVICE_ACCOUNT_CREDENTIALS: process.env.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS || '',
+
+  // Resend Email
+  RESEND_API_KEY: process.env.RESEND_API_KEY || '',
+  RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
+
+  // Legacy Email (Keep for backwards compatibility)
+  EMAIL_PROVIDER: process.env.EMAIL_PROVIDER || 'resend',
   SMTP_HOST: process.env.SMTP_HOST,
   SMTP_PORT: parseInt(process.env.SMTP_PORT || '587'),
   SMTP_USER: process.env.SMTP_USER,

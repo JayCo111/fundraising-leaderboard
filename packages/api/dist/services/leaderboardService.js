@@ -1,33 +1,23 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.LeaderboardService = void 0;
 // packages/api/src/services/leaderboardService.ts
-import { Pool } from 'pg';
-import { config } from '../config';
-import { 
-  LeaderboardRequest, 
-  LeaderboardEntry, 
-  UserScopes, 
-  ScopeType, 
-  LeaderboardMetric,
-  LeaderboardPeriod 
-} from '@sportsraiser/core/types';
-import { RBACService } from '@sportsraiser/core/rbac';
-
-export class LeaderboardService {
-  private db: Pool;
-
-  constructor() {
-    this.db = new Pool({
-      connectionString: config.DATABASE_URL,
-      ssl: config.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-    });
-  }
-
-  async getLeaderboard(request: LeaderboardRequest, userScopes: UserScopes): Promise<LeaderboardEntry[]> {
-    // Check if user can access this scope
-    if (!RBACService.canAccessScope(userScopes, { type: request.scope_type, id: request.scope_id })) {
-      throw new Error('Insufficient permissions to access this scope');
+const pg_1 = require("pg");
+const config_1 = require("../config");
+const rbac_1 = require("@sportsraiser/core/rbac");
+class LeaderboardService {
+    constructor() {
+        this.db = new pg_1.Pool({
+            connectionString: config_1.config.DATABASE_URL,
+            ssl: config_1.config.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+        });
     }
-
-    const query = `
+    async getLeaderboard(request, userScopes) {
+        // Check if user can access this scope
+        if (!rbac_1.RBACService.canAccessScope(userScopes, { type: request.scope_type, id: request.scope_id })) {
+            throw new Error('Insufficient permissions to access this scope');
+        }
+        const query = `
       SELECT 
         scope_type,
         scope_id,
@@ -44,20 +34,17 @@ export class LeaderboardService {
       ORDER BY rank ASC
       LIMIT 100
     `;
-
-    const result = await this.db.query(query, [
-      request.scope_type,
-      request.scope_id,
-      request.metric,
-      request.period
-    ]);
-
-    return result.rows;
-  }
-
-  async getTeamVsTeam(request: LeaderboardRequest, userScopes: UserScopes): Promise<any[]> {
-    // Get all teams in the program
-    const teamsQuery = `
+        const result = await this.db.query(query, [
+            request.scope_type,
+            request.scope_id,
+            request.metric,
+            request.period
+        ]);
+        return result.rows;
+    }
+    async getTeamVsTeam(request, userScopes) {
+        // Get all teams in the program
+        const teamsQuery = `
       SELECT 
         t.id,
         t.name,
@@ -79,20 +66,17 @@ export class LeaderboardService {
         CASE WHEN $2 = 'participation' THEN (COUNT(DISTINCT CASE WHEN tr.id IS NOT NULL THEN ap.user_id END)::float / NULLIF(COUNT(DISTINCT ap.user_id), 0)) END DESC,
         CASE WHEN $2 = 'avg_per_athlete' THEN (COALESCE(SUM(tr.amount), 0)::float / NULLIF(COUNT(DISTINCT ap.user_id), 0)) END DESC
     `;
-
-    const result = await this.db.query(teamsQuery, [request.scope_id, request.metric]);
-    
-    return result.rows.map((row, index) => ({
-      ...row,
-      rank: index + 1,
-      participation_rate: row.athlete_count > 0 ? (row.active_sellers / row.athlete_count) : 0,
-      goal_percentage: row.goal_revenue > 0 ? (row.total_revenue / row.goal_revenue) : 0,
-      avg_per_athlete: row.athlete_count > 0 ? (row.total_revenue / row.athlete_count) : 0
-    }));
-  }
-
-  async getAthleteLeaderboard(request: LeaderboardRequest, userScopes: UserScopes): Promise<any[]> {
-    const query = `
+        const result = await this.db.query(teamsQuery, [request.scope_id, request.metric]);
+        return result.rows.map((row, index) => ({
+            ...row,
+            rank: index + 1,
+            participation_rate: row.athlete_count > 0 ? (row.active_sellers / row.athlete_count) : 0,
+            goal_percentage: row.goal_revenue > 0 ? (row.total_revenue / row.goal_revenue) : 0,
+            avg_per_athlete: row.athlete_count > 0 ? (row.total_revenue / row.athlete_count) : 0
+        }));
+    }
+    async getAthleteLeaderboard(request, userScopes) {
+        const query = `
       SELECT 
         u.id,
         u.name,
@@ -112,18 +96,15 @@ export class LeaderboardService {
         CASE WHEN $2 = 'revenue' THEN COALESCE(SUM(tr.amount), 0) END DESC,
         CASE WHEN $2 = 'avg_per_athlete' THEN COALESCE(SUM(tr.amount), 0) END DESC
     `;
-
-    const result = await this.db.query(query, [request.scope_id, request.metric]);
-    
-    return result.rows.map((row, index) => ({
-      ...row,
-      rank: index + 1,
-      avg_per_transaction: row.transaction_count > 0 ? (row.total_revenue / row.transaction_count) : 0
-    }));
-  }
-
-  async getProgramLeaderboard(request: LeaderboardRequest, userScopes: UserScopes): Promise<any[]> {
-    const query = `
+        const result = await this.db.query(query, [request.scope_id, request.metric]);
+        return result.rows.map((row, index) => ({
+            ...row,
+            rank: index + 1,
+            avg_per_transaction: row.transaction_count > 0 ? (row.total_revenue / row.transaction_count) : 0
+        }));
+    }
+    async getProgramLeaderboard(request, userScopes) {
+        const query = `
       SELECT 
         p.id,
         p.sport,
@@ -144,19 +125,16 @@ export class LeaderboardService {
         CASE WHEN $2 = 'participation' THEN (COUNT(DISTINCT CASE WHEN tr.id IS NOT NULL THEN ap.user_id END)::float / NULLIF(COUNT(DISTINCT ap.user_id), 0)) END DESC,
         CASE WHEN $2 = 'avg_per_athlete' THEN (COALESCE(SUM(tr.amount), 0)::float / NULLIF(COUNT(DISTINCT ap.user_id), 0)) END DESC
     `;
-
-    const result = await this.db.query(query, [request.scope_id, request.metric]);
-    
-    return result.rows.map((row, index) => ({
-      ...row,
-      rank: index + 1,
-      participation_rate: row.athlete_count > 0 ? (row.active_sellers / row.athlete_count) : 0,
-      avg_per_athlete: row.athlete_count > 0 ? (row.total_revenue / row.athlete_count) : 0
-    }));
-  }
-
-  async getTerritoryLeaderboard(request: LeaderboardRequest, userScopes: UserScopes): Promise<any[]> {
-    const query = `
+        const result = await this.db.query(query, [request.scope_id, request.metric]);
+        return result.rows.map((row, index) => ({
+            ...row,
+            rank: index + 1,
+            participation_rate: row.athlete_count > 0 ? (row.active_sellers / row.athlete_count) : 0,
+            avg_per_athlete: row.athlete_count > 0 ? (row.total_revenue / row.athlete_count) : 0
+        }));
+    }
+    async getTerritoryLeaderboard(request, userScopes) {
+        const query = `
       SELECT 
         o.id,
         o.name,
@@ -184,19 +162,16 @@ export class LeaderboardService {
         CASE WHEN $2 = 'participation' THEN (COUNT(DISTINCT CASE WHEN tr.id IS NOT NULL THEN ap.user_id END)::float / NULLIF(COUNT(DISTINCT ap.user_id), 0)) END DESC,
         CASE WHEN $2 = 'avg_per_athlete' THEN (COALESCE(SUM(tr.amount), 0)::float / NULLIF(COUNT(DISTINCT ap.user_id), 0)) END DESC
     `;
-
-    const result = await this.db.query(query, [request.scope_id, request.metric]);
-    
-    return result.rows.map((row, index) => ({
-      ...row,
-      rank: index + 1,
-      participation_rate: row.athlete_count > 0 ? (row.active_sellers / row.athlete_count) : 0,
-      avg_per_athlete: row.athlete_count > 0 ? (row.total_revenue / row.athlete_count) : 0
-    }));
-  }
-
-  async getStateLeaderboard(request: LeaderboardRequest, userScopes: UserScopes): Promise<any[]> {
-    const query = `
+        const result = await this.db.query(query, [request.scope_id, request.metric]);
+        return result.rows.map((row, index) => ({
+            ...row,
+            rank: index + 1,
+            participation_rate: row.athlete_count > 0 ? (row.active_sellers / row.athlete_count) : 0,
+            avg_per_athlete: row.athlete_count > 0 ? (row.total_revenue / row.athlete_count) : 0
+        }));
+    }
+    async getStateLeaderboard(request, userScopes) {
+        const query = `
       SELECT 
         o.id,
         o.name,
@@ -224,19 +199,16 @@ export class LeaderboardService {
         CASE WHEN $2 = 'participation' THEN (COUNT(DISTINCT CASE WHEN tr.id IS NOT NULL THEN ap.user_id END)::float / NULLIF(COUNT(DISTINCT ap.user_id), 0)) END DESC,
         CASE WHEN $2 = 'avg_per_athlete' THEN (COALESCE(SUM(tr.amount), 0)::float / NULLIF(COUNT(DISTINCT ap.user_id), 0)) END DESC
     `;
-
-    const result = await this.db.query(query, [request.scope_id, request.metric]);
-    
-    return result.rows.map((row, index) => ({
-      ...row,
-      rank: index + 1,
-      participation_rate: row.athlete_count > 0 ? (row.active_sellers / row.athlete_count) : 0,
-      avg_per_athlete: row.athlete_count > 0 ? (row.total_revenue / row.athlete_count) : 0
-    }));
-  }
-
-  async getRegionLeaderboard(request: LeaderboardRequest, userScopes: UserScopes): Promise<any[]> {
-    const query = `
+        const result = await this.db.query(query, [request.scope_id, request.metric]);
+        return result.rows.map((row, index) => ({
+            ...row,
+            rank: index + 1,
+            participation_rate: row.athlete_count > 0 ? (row.active_sellers / row.athlete_count) : 0,
+            avg_per_athlete: row.athlete_count > 0 ? (row.total_revenue / row.athlete_count) : 0
+        }));
+    }
+    async getRegionLeaderboard(request, userScopes) {
+        const query = `
       SELECT 
         o.id,
         o.name,
@@ -264,19 +236,16 @@ export class LeaderboardService {
         CASE WHEN $2 = 'participation' THEN (COUNT(DISTINCT CASE WHEN tr.id IS NOT NULL THEN ap.user_id END)::float / NULLIF(COUNT(DISTINCT ap.user_id), 0)) END DESC,
         CASE WHEN $2 = 'avg_per_athlete' THEN (COALESCE(SUM(tr.amount), 0)::float / NULLIF(COUNT(DISTINCT ap.user_id), 0)) END DESC
     `;
-
-    const result = await this.db.query(query, [request.scope_id, request.metric]);
-    
-    return result.rows.map((row, index) => ({
-      ...row,
-      rank: index + 1,
-      participation_rate: row.athlete_count > 0 ? (row.active_sellers / row.athlete_count) : 0,
-      avg_per_athlete: row.athlete_count > 0 ? (row.total_revenue / row.athlete_count) : 0
-    }));
-  }
-
-  async getNationalLeaderboard(request: LeaderboardRequest, userScopes: UserScopes): Promise<any[]> {
-    const query = `
+        const result = await this.db.query(query, [request.scope_id, request.metric]);
+        return result.rows.map((row, index) => ({
+            ...row,
+            rank: index + 1,
+            participation_rate: row.athlete_count > 0 ? (row.active_sellers / row.athlete_count) : 0,
+            avg_per_athlete: row.athlete_count > 0 ? (row.total_revenue / row.athlete_count) : 0
+        }));
+    }
+    async getNationalLeaderboard(request, userScopes) {
+        const query = `
       SELECT 
         o.id,
         o.name,
@@ -299,21 +268,20 @@ export class LeaderboardService {
         CASE WHEN $1 = 'participation' THEN (COUNT(DISTINCT CASE WHEN tr.id IS NOT NULL THEN ap.user_id END)::float / NULLIF(COUNT(DISTINCT ap.user_id), 0)) END DESC,
         CASE WHEN $1 = 'avg_per_athlete' THEN (COALESCE(SUM(tr.amount), 0)::float / NULLIF(COUNT(DISTINCT ap.user_id), 0)) END DESC
     `;
-
-    const result = await this.db.query(query, [request.metric]);
-    
-    return result.rows.map((row, index) => ({
-      ...row,
-      rank: index + 1,
-      participation_rate: row.athlete_count > 0 ? (row.active_sellers / row.athlete_count) : 0,
-      avg_per_athlete: row.athlete_count > 0 ? (row.total_revenue / row.athlete_count) : 0
-    }));
-  }
-
-  // Background worker method to update leaderboards
-  async updateLeaderboard(scopeType: ScopeType, scopeId: string, metric: LeaderboardMetric, period: LeaderboardPeriod): Promise<void> {
-    // This would be called by the background worker to update materialized leaderboard entries
-    // Implementation would depend on the specific aggregation logic for each scope type
-    console.log(`Updating leaderboard: ${scopeType}/${scopeId}/${metric}/${period}`);
-  }
+        const result = await this.db.query(query, [request.metric]);
+        return result.rows.map((row, index) => ({
+            ...row,
+            rank: index + 1,
+            participation_rate: row.athlete_count > 0 ? (row.active_sellers / row.athlete_count) : 0,
+            avg_per_athlete: row.athlete_count > 0 ? (row.total_revenue / row.athlete_count) : 0
+        }));
+    }
+    // Background worker method to update leaderboards
+    async updateLeaderboard(scopeType, scopeId, metric, period) {
+        // This would be called by the background worker to update materialized leaderboard entries
+        // Implementation would depend on the specific aggregation logic for each scope type
+        console.log(`Updating leaderboard: ${scopeType}/${scopeId}/${metric}/${period}`);
+    }
 }
+exports.LeaderboardService = LeaderboardService;
+//# sourceMappingURL=leaderboardService.js.map

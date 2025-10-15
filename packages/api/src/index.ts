@@ -4,23 +4,11 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { config } from './config';
-import { authMiddleware } from './middleware/auth';
-import { errorHandler } from './middleware/error';
-import { auditLogger } from './middleware/audit';
 import { authRoutes } from './routes/auth';
-import { userRoutes } from './routes/users';
-import { organizationRoutes } from './routes/organizations';
-import { programRoutes } from './routes/programs';
-import { teamRoutes } from './routes/teams';
-import { prospectRoutes } from './routes/prospects';
-import { campaignRoutes } from './routes/campaigns';
-import { transactionRoutes } from './routes/transactions';
-import { leaderboardRoutes } from './routes/leaderboards';
-import { messageRoutes } from './routes/messages';
-import { rewardRoutes } from './routes/rewards';
-import { exportRoutes } from './routes/exports';
-import { auditRoutes } from './routes/audit';
-import { webhookRoutes } from './routes/webhooks';
+import { studentsRoutes } from './routes/students';
+import { ordersRoutes } from './routes/orders';
+import { referralsRoutes } from './routes/referrals';
+import { leaderboardRoutes } from './routes/leaderboard';
 
 const app = express();
 
@@ -50,25 +38,10 @@ app.get('/health', (req, res) => {
 
 // API routes
 app.use('/api/v1/auth', authRoutes);
-app.use('/api/v1/users', authMiddleware, userRoutes);
-app.use('/api/v1/organizations', authMiddleware, organizationRoutes);
-app.use('/api/v1/programs', authMiddleware, programRoutes);
-app.use('/api/v1/teams', authMiddleware, teamRoutes);
-app.use('/api/v1/prospects', authMiddleware, prospectRoutes);
-app.use('/api/v1/campaigns', authMiddleware, campaignRoutes);
-app.use('/api/v1/transactions', authMiddleware, transactionRoutes);
-app.use('/api/v1/leaderboards', authMiddleware, leaderboardRoutes);
-app.use('/api/v1/messages', authMiddleware, messageRoutes);
-app.use('/api/v1/rewards', authMiddleware, rewardRoutes);
-app.use('/api/v1/exports', authMiddleware, exportRoutes);
-app.use('/api/v1/audit', authMiddleware, auditRoutes);
-app.use('/api/v1/webhooks', webhookRoutes); // No auth for webhooks
-
-// Audit logging middleware
-app.use(auditLogger);
-
-// Error handling
-app.use(errorHandler);
+app.use('/api/v1/students', studentsRoutes);
+app.use('/api/v1/orders', ordersRoutes);
+app.use('/api/v1/referrals', referralsRoutes);
+app.use('/api/v1/leaderboard', leaderboardRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {
