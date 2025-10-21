@@ -13,12 +13,31 @@ const config_1 = require("../config");
 class GoogleSheetsService {
     constructor() {
         // Initialize Google Sheets API client
-        const auth = new googleapis_1.google.auth.GoogleAuth({
-            credentials: config_1.config.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS
-                ? JSON.parse(config_1.config.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS)
-                : undefined,
-            scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-        });
+        let auth;
+        // Try to use Service Account credentials first (full access)
+        if (config_1.config.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS &&
+            config_1.config.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS.trim() !== '' &&
+            config_1.config.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS !== '{}') {
+            try {
+                auth = new googleapis_1.google.auth.GoogleAuth({
+                    credentials: JSON.parse(config_1.config.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS),
+                    scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+                });
+                console.log('✅ Using Google Service Account (full read/write access)');
+            }
+            catch (error) {
+                console.warn('⚠️  Failed to parse Service Account credentials, falling back to API Key');
+                auth = undefined;
+            }
+        }
+        // Fallback to API Key (read-only access)
+        if (!auth && config_1.config.GOOGLE_API_KEY) {
+            console.log('✅ Using Google API Key (read-only access)');
+            auth = config_1.config.GOOGLE_API_KEY;
+        }
+        if (!auth) {
+            console.error('❌ No Google Sheets credentials found! Please set GOOGLE_SERVICE_ACCOUNT_CREDENTIALS or GOOGLE_API_KEY');
+        }
         this.sheets = googleapis_1.google.sheets({ version: 'v4', auth });
         this.spreadsheetId = config_1.config.GOOGLE_SHEET_ID;
     }
