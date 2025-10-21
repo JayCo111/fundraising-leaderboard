@@ -10,6 +10,7 @@
 
 import { useState, useEffect } from 'react';
 import { Trophy, Mail, AlertCircle, CheckCircle, Loader, LogIn } from 'lucide-react';
+import apiClient from '../services/apiClient';
 
 const LoginPage = ({ onLogin, studentsData, loading }) => {
   const [formData, setFormData] = useState({ email: '' });
@@ -56,28 +57,16 @@ const LoginPage = ({ onLogin, studentsData, loading }) => {
         return;
       }
 
-      // Send magic link
-      const response = await fetch(process.env.REACT_APP_GOOGLE_APPS_SCRIPT_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'sendMagicLink',
-          sheetId: process.env.REACT_APP_GOOGLE_SHEET_ID,
-          email: formData.email,
-          resendApiKey: process.env.REACT_APP_RESEND_API_KEY,
-          appUrl: window.location.origin
-        })
-      });
-
-      const result = await response.json();
+      // Send magic link using new backend API
+      const result = await apiClient.auth.sendMagicLink(formData.email.trim());
 
       if (result.success) {
         setLoginMessage('Check your email! We sent you a login link.');
       } else {
-        setLoginError('Failed to send login link. Please try again.');
+        setLoginError(result.error || 'Failed to send login link. Please try again.');
       }
     } catch (error) {
-      setLoginError('Something went wrong. Please try again.');
+      setLoginError(error.message || 'Something went wrong. Please try again.');
     } finally {
       setIsLoggingIn(false);
     }
@@ -88,25 +77,21 @@ const LoginPage = ({ onLogin, studentsData, loading }) => {
     setLoginError('');
 
     try {
-      const response = await fetch(process.env.REACT_APP_GOOGLE_APPS_SCRIPT_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'verifyToken',
-          sheetId: process.env.REACT_APP_GOOGLE_SHEET_ID,
-          token
-        })
-      });
+      // Verify token using new backend API
+      const result = await apiClient.auth.verifyMagicLink(token);
 
-      const result = await response.json();
-
-      if (result.success) {
-        // Find student by email
+      if (result.success && result.user) {
+        // Find student by email from the returned user object
         const student = studentsData.find(s =>
-          s.ParentEmail?.toLowerCase() === result.email.toLowerCase()
+          s.ParentEmail?.toLowerCase() === result.user.ParentEmail.toLowerCase()
         );
 
         if (student) {
+          // Store JWT token for future requests
+          if (result.token) {
+            apiClient.setAuthToken(result.token);
+          }
+
           onLogin(student);
           // Clear token from URL
           window.history.replaceState({}, '', '/');
@@ -117,7 +102,7 @@ const LoginPage = ({ onLogin, studentsData, loading }) => {
         setLoginError(result.error || 'Invalid or expired login link.');
       }
     } catch (error) {
-      setLoginError('Failed to verify login link.');
+      setLoginError(error.message || 'Failed to verify login link.');
     } finally {
       setIsLoggingIn(false);
     }
