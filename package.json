@@ -7,11 +7,11 @@
     "packages/*"
   ],
   "scripts": {
-    "start": "GENERATE_SOURCEMAP=false react-scripts start",
-    "start:fast": "FAST_REFRESH=true GENERATE_SOURCEMAP=false react-scripts start",
-    "start:analyze": "ANALYZE=true react-scripts start",
+    "start": "cross-env GENERATE_SOURCEMAP=false react-scripts start",
+    "start:fast": "cross-env FAST_REFRESH=true GENERATE_SOURCEMAP=false react-scripts start",
+    "start:analyze": "cross-env ANALYZE=true react-scripts start",
     "build": "react-scripts build",
-    "build:analyze": "ANALYZE=true react-scripts build",
+    "build:analyze": "cross-env ANALYZE=true react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "lint": "eslint src --ext .js,.jsx --fix",
@@ -31,16 +31,17 @@
     "web-vitals": "^2.1.4"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2",
-    "typescript": "^4.9.5",
     "@types/node": "^20.10.0",
+    "concurrently": "^8.2.2",
+    "cross-env": "^10.1.0",
     "eslint": "^8.57.0",
     "eslint-config-react-app": "^7.0.1",
     "prettier": "^3.1.0",
-    "rimraf": "^5.0.5",
-    "webpack-bundle-analyzer": "^4.10.1",
     "react-refresh": "^0.14.0",
-    "terser-webpack-plugin": "^5.3.9"
+    "rimraf": "^5.0.5",
+    "terser-webpack-plugin": "^5.3.9",
+    "typescript": "^4.9.5",
+    "webpack-bundle-analyzer": "^4.10.1"
   },
   "browserslist": {
     "production": [

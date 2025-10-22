@@ -20,6 +20,13 @@ class ApiClient {
   }
 
   /**
+   * Alias for setToken (used by LoginPage)
+   */
+  setAuthToken(token) {
+    this.setToken(token);
+  }
+
+  /**
    * Clear authentication token
    */
   clearToken() {
@@ -65,54 +72,56 @@ class ApiClient {
 
   // ==================== AUTHENTICATION ====================
 
-  /**
-   * Send magic link to email
-   */
-  async sendMagicLink(email) {
-    return this.request('/auth/magic-link', {
-      method: 'POST',
-      body: JSON.stringify({ email }),
-    });
-  }
+  auth = {
+    /**
+     * Send magic link to email
+     */
+    sendMagicLink: async (email) => {
+      return this.request('/auth/magic-link', {
+        method: 'POST',
+        body: JSON.stringify({ email }),
+      });
+    },
 
-  /**
-   * Verify magic link token and get JWT
-   */
-  async verifyToken(token) {
-    const response = await this.request('/auth/verify', {
-      method: 'POST',
-      body: JSON.stringify({ token }),
-    });
+    /**
+     * Verify magic link token and get JWT
+     */
+    verifyMagicLink: async (token) => {
+      const response = await this.request('/auth/verify', {
+        method: 'POST',
+        body: JSON.stringify({ token }),
+      });
 
-    if (response.token) {
-      this.setToken(response.token);
+      if (response.data && response.data.token) {
+        this.setToken(response.data.token);
+      }
+
+      return response;
+    },
+
+    /**
+     * Get current user info
+     */
+    getCurrentUser: async () => {
+      return this.request('/auth/me');
+    },
+
+    /**
+     * Refresh user data from Google Sheets
+     */
+    refreshUserData: async () => {
+      return this.request('/auth/refresh', {
+        method: 'POST',
+      });
+    },
+
+    /**
+     * Logout
+     */
+    logout: () => {
+      this.clearToken();
     }
-
-    return response;
-  }
-
-  /**
-   * Get current user info
-   */
-  async getCurrentUser() {
-    return this.request('/auth/me');
-  }
-
-  /**
-   * Refresh user data from Google Sheets
-   */
-  async refreshUserData() {
-    return this.request('/auth/refresh', {
-      method: 'POST',
-    });
-  }
-
-  /**
-   * Logout
-   */
-  logout() {
-    this.clearToken();
-  }
+  };
 
   // ==================== STUDENTS ====================
 

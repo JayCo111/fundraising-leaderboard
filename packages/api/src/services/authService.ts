@@ -3,6 +3,7 @@ import { Resend } from 'resend';
 import jwt from 'jsonwebtoken';
 import { config } from '../config';
 import googleSheetsService from './googleSheetsService';
+import { tokenStorageService } from './tokenStorageService';
 import { EmailTemplates } from '../templates/emailTemplates';
 import { Helpers } from '../utils/helpers';
 import { Validators } from '../utils/validators';
@@ -56,8 +57,15 @@ export class AuthService {
     const token = Helpers.generateToken(32);
     const expiresAt = Helpers.addTime(new Date(), AUTH_CONSTANTS.MAGIC_LINK_EXPIRY_MS);
 
-    // Store token in AuthTokens sheet
-    await googleSheetsService.createAuthToken(token, sanitizedEmail, expiresAt);
+    // Store token - try Google Sheets first, fallback to memory
+    try {
+      await googleSheetsService.createAuthToken(token, sanitizedEmail, expiresAt);
+      console.log('✅ Token stored in Google Sheets');
+    } catch (error: any) {
+      console.warn('⚠️  Cannot write to Google Sheets, using in-memory storage:', error.message);
+      await tokenStorageService.createToken(token, sanitizedEmail, expiresAt);
+      console.log('✅ Token stored in memory (temporary)');
+    }
 
     // Create magic link
     const magicLink = `${appUrl}?token=${token}`;
@@ -110,28 +118,48 @@ export class AuthService {
       throw new Error(ERROR_MESSAGES.INVALID_TOKEN);
     }
 
-    // Get token from AuthTokens sheet
-    const tokenData = await googleSheetsService.getAuthToken(token);
+    // Check memory storage first (since we're using API Key which can't write to Sheets)
+    let email: string = '';
+    const memoryToken = await tokenStorageService.getToken(token);
 
-    if (!tokenData) {
-      throw new Error(ERROR_MESSAGES.INVALID_TOKEN);
+    if (memoryToken) {
+      // Token found in memory storage
+      email = memoryToken.email;
+      // Delete token after use (one-time use)
+      await tokenStorageService.deleteToken(token);
+      console.log('✅ Token verified from memory storage');
+    } else {
+      // Try Google Sheets as fallback
+      try {
+        const tokenData = await googleSheetsService.getAuthToken(token);
+
+        if (!tokenData) {
+          throw new Error(ERROR_MESSAGES.INVALID_TOKEN);
+        }
+
+        email = tokenData.Email;
+
+        // Check if already used
+        if (tokenData.Used) {
+          throw new Error(ERROR_MESSAGES.TOKEN_ALREADY_USED);
+        }
+
+        // Check if expired
+        if (Helpers.isExpired(tokenData.ExpiresAt)) {
+          throw new Error(ERROR_MESSAGES.TOKEN_EXPIRED);
+        }
+
+        // Mark token as used
+        await googleSheetsService.markTokenAsUsed(token);
+        console.log('✅ Token verified from Google Sheets');
+      } catch (error) {
+        // Token not found in either storage
+        throw new Error(ERROR_MESSAGES.INVALID_TOKEN);
+      }
     }
-
-    // Check if already used
-    if (tokenData.Used) {
-      throw new Error(ERROR_MESSAGES.TOKEN_ALREADY_USED);
-    }
-
-    // Check if expired
-    if (Helpers.isExpired(tokenData.ExpiresAt)) {
-      throw new Error(ERROR_MESSAGES.TOKEN_EXPIRED);
-    }
-
-    // Mark token as used
-    await googleSheetsService.markTokenAsUsed(token);
 
     // Get student data
-    const student = await googleSheetsService.getStudentByEmail(tokenData.Email);
+    const student = await googleSheetsService.getStudentByEmail(email);
 
     if (!student) {
       throw new Error(ERROR_MESSAGES.STUDENT_NOT_FOUND);
