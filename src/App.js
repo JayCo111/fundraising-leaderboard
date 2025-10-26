@@ -89,13 +89,19 @@ const FundraisingApp = () => {
       );
 
       if (updatedStudent) {
-        // Update currentStudent with fresh data from Google Sheets
-        setCurrentStudent(updatedStudent);
-        // Update localStorage with fresh data
-        localStorage.setItem('currentStudent', JSON.stringify(updatedStudent));
+        // Only update if the data has actually changed (prevent infinite loop)
+        const hasChanged = JSON.stringify(currentStudent) !== JSON.stringify(updatedStudent);
+
+        if (hasChanged) {
+          // Update currentStudent with fresh data from Google Sheets
+          setCurrentStudent(updatedStudent);
+          // Update localStorage with fresh data
+          localStorage.setItem('currentStudent', JSON.stringify(updatedStudent));
+        }
       }
     }
-  }, [studentsWithTeamStats, currentStudent]); // Run whenever enriched data changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [studentsWithTeamStats]); // Only run when studentsWithTeamStats changes, not currentStudent
 
   useEffect(() => {
     const fetchSheetData = async () => {
