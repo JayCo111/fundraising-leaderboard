@@ -80,29 +80,6 @@ const FundraisingApp = () => {
     }
   }, []);
 
-  // Sync currentStudent with fresh data from Google Sheets after data loads
-  useEffect(() => {
-    if (currentStudent && studentsWithTeamStats.length > 0) {
-      // Find the updated student data by StudentID (use enriched data with calculations)
-      const updatedStudent = studentsWithTeamStats.find(
-        s => s.StudentID === currentStudent.StudentID
-      );
-
-      if (updatedStudent) {
-        // Only update if the data has actually changed (prevent infinite loop)
-        const hasChanged = JSON.stringify(currentStudent) !== JSON.stringify(updatedStudent);
-
-        if (hasChanged) {
-          // Update currentStudent with fresh data from Google Sheets
-          setCurrentStudent(updatedStudent);
-          // Update localStorage with fresh data
-          localStorage.setItem('currentStudent', JSON.stringify(updatedStudent));
-        }
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [studentsWithTeamStats]); // Only run when studentsWithTeamStats changes, not currentStudent
-
   useEffect(() => {
     const fetchSheetData = async () => {
       // Check if we have API credentials
@@ -429,6 +406,28 @@ const programsJson = await programsResponse.json();
       }));
   }, [studentsWithTeamStats]);
 
+  // Sync currentStudent with fresh data from Google Sheets after data loads
+  useEffect(() => {
+    if (currentStudent && studentsWithTeamStats.length > 0) {
+      // Find the updated student data by StudentID (use enriched data with calculations)
+      const updatedStudent = studentsWithTeamStats.find(
+        s => s.StudentID === currentStudent.StudentID
+      );
+
+      if (updatedStudent) {
+        // Only update if the data has actually changed (prevent infinite loop)
+        const hasChanged = JSON.stringify(currentStudent) !== JSON.stringify(updatedStudent);
+
+        if (hasChanged) {
+          // Update currentStudent with fresh data from Google Sheets
+          setCurrentStudent(updatedStudent);
+          // Update localStorage with fresh data
+          localStorage.setItem('currentStudent', JSON.stringify(updatedStudent));
+        }
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [studentsWithTeamStats]); // Only run when studentsWithTeamStats changes, not currentStudent
 
   const copyLink = () => {
     if (currentStudent?.PersonalLink) {
