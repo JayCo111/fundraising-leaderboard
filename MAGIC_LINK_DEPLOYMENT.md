@@ -24,30 +24,39 @@ npm install
 ```
 
 This installs:
-- `@vercel/kv` - Vercel's Redis storage for tokens
+- `redis` - Redis client for token storage
 - `resend` - Email service for sending magic links
 
-### Step 2: Enable Vercel KV (2 min) ⚠️ **CRITICAL**
+### Step 2: Add Redis and Resend Environment Variables (5 min) ⚠️ **CRITICAL**
 
-Vercel KV is needed to store magic link tokens temporarily. **Follow these steps carefully:**
+You need to add the following environment variables to Vercel:
 
-1. **Go to your Vercel Dashboard**: https://vercel.com/dashboard
-2. **Click on your project**: "fundraising-leaderboard" (or whatever you named it)
-3. **Click the "Storage" tab** at the top
-4. **Click "Create Database"**
-5. **Select "KV (Redis)"**
-6. **Click "Continue"**
-7. **Name it**: "magic-link-tokens" (or any name you like)
-8. **Select your region**: Choose the one closest to you
-9. **Click "Create"**
-10. **Click "Connect to Project"** - This automatically adds the KV environment variables to your project
+1. **Install Vercel CLI** (if not already installed):
+   ```bash
+   npm install -g vercel
+   ```
 
-**That's it!** Vercel automatically adds these environment variables for you:
-- `KV_REST_API_URL`
-- `KV_REST_API_TOKEN`
-- `KV_REST_API_READ_ONLY_TOKEN`
+2. **Login to Vercel**:
+   ```bash
+   vercel login
+   ```
 
-You don't need to copy/paste anything - Vercel handles it automatically! ✨
+3. **Add environment variables using printf** (to avoid newline issues):
+   ```bash
+   # Add your Redis URL (get this from your Redis provider)
+   printf "your_redis_url_here" | vercel env add REDIS_URL production
+
+   # Add your Resend API key (get from https://resend.com/api-keys)
+   printf "your_resend_api_key" | vercel env add RESEND_API_KEY production
+
+   # Add your Resend from email (format: "Name <email@domain.com>")
+   printf "SportsRaiser <onboarding@resend.dev>" | vercel env add RESEND_FROM_EMAIL production
+   ```
+
+**Important Notes:**
+- Use `printf` instead of `echo` to avoid adding newline characters
+- The Resend from email must follow format: `Name <email@example.com>`
+- For Redis, you can use services like Upstash, Redis Labs, or Railway
 
 ### Step 3: Commit and Push Changes (3 min)
 
@@ -138,14 +147,14 @@ Vercel will automatically:
 ### Issue: "Invalid or expired login link" (immediately)
 
 **Possible Cause:**
-- Vercel KV is not connected properly
+- Redis connection is not working properly
+- `REDIS_URL` environment variable is missing or incorrect
 
 **Solution:**
-1. Go to Vercel Dashboard → Your Project → Storage
-2. Check if KV database exists
-3. Check if it's connected to your project
-4. Look for `KV_REST_API_URL` and `KV_REST_API_TOKEN` in Environment Variables
-5. If missing, click "Connect to Project" on the KV database
+1. Go to Vercel Dashboard → Your Project → Settings → Environment Variables
+2. Check if `REDIS_URL` exists and is correct
+3. Verify your Redis provider is accessible
+4. Check Vercel function logs for Redis connection errors
 
 ---
 
@@ -199,14 +208,14 @@ Vercel will automatically:
 
 **What Happens Behind the Scenes:**
 1. Frontend calls `/api/auth/send-magic-link`
-2. Vercel function checks Google Sheets
-3. Token generated and stored in Vercel KV (15-min expiry)
-4. Email sent via Resend
-5. User clicks link
+2. Vercel function checks Google Sheets for email
+3. Token generated and stored in Redis (15-min expiry)
+4. Email sent via Resend with magic link
+5. User clicks link in email
 6. Frontend calls `/api/auth/verify-token`
-7. Vercel function validates token, fetches user data
-8. Token deleted from KV
-9. User logged in
+7. Vercel function validates token in Redis, fetches user data from Google Sheets
+8. Token deleted from Redis (one-time use)
+9. User logged in with student data
 
 ---
 
@@ -255,10 +264,11 @@ Vercel will automatically:
 - **Delivery rate**: Success percentage
 - **Bounce rate**: Failed deliveries
 
-### Vercel KV Dashboard:
+### Redis Dashboard (Your Redis Provider):
 - **Storage used**: How many tokens stored
 - **Commands**: API calls made
-- **Free tier limits**: 256 MB, 10,000 commands/day
+- **Connection status**: Ensure Redis is accessible
+- Check your Redis provider's dashboard for monitoring
 
 ---
 
