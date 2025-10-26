@@ -5,7 +5,17 @@
  * It verifies the token and returns the student data for authentication.
  */
 
-import { kv } from '@vercel/kv';
+import { createClient } from 'redis';
+
+// Create Redis client from REDIS_URL
+let redisClient = null;
+async function getRedisClient() {
+  if (!redisClient) {
+    redisClient = createClient({ url: process.env.REDIS_URL });
+    await redisClient.connect();
+  }
+  return redisClient;
+}
 
 export default async function handler(req, res) {
   // Only allow POST requests
@@ -27,8 +37,9 @@ export default async function handler(req, res) {
       });
     }
 
-    // Look up token in Vercel KV
-    const email = await kv.get(`magic-link:${token}`);
+    // Look up token in Redis
+    const redis = await getRedisClient();
+    const email = await redis.get(`magic-link:${token}`);
 
     if (!email) {
       return res.status(401).json({
@@ -38,7 +49,7 @@ export default async function handler(req, res) {
     }
 
     // Delete token immediately (one-time use)
-    await kv.del(`magic-link:${token}`);
+    await redis.del(`magic-link:${token}`);
 
     // Fetch student data from Google Sheets
     const sheetsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${process.env.REACT_APP_GOOGLE_SHEET_ID}/values/Students!A2:K1000?key=${process.env.REACT_APP_GOOGLE_API_KEY}`;

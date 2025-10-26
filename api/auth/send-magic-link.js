@@ -5,11 +5,21 @@
  * It checks if the email exists in Google Sheets and sends a magic link via Resend.
  */
 
-import { kv } from '@vercel/kv';
 import { Resend } from 'resend';
 import crypto from 'crypto';
+import { createClient } from 'redis';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
+
+// Create Redis client from REDIS_URL
+let redisClient = null;
+async function getRedisClient() {
+  if (!redisClient) {
+    redisClient = createClient({ url: process.env.REDIS_URL });
+    await redisClient.connect();
+  }
+  return redisClient;
+}
 
 export default async function handler(req, res) {
   // Only allow POST requests
@@ -85,11 +95,10 @@ export default async function handler(req, res) {
     // Generate secure token (32 bytes = 64 hex characters)
     const token = crypto.randomBytes(32).toString('hex');
 
-    // Store token in Vercel KV with 15-minute expiry
+    // Store token in Redis with 15-minute expiry
     // Key: token, Value: email
-    await kv.set(`magic-link:${token}`, cleanEmail, {
-      ex: 900 // expires in 900 seconds (15 minutes)
-    });
+    const redis = await getRedisClient();
+    await redis.setEx(`magic-link:${token}`, 900, cleanEmail); // expires in 900 seconds (15 minutes)
 
     // Get the site URL (Vercel provides this automatically)
     const siteUrl = process.env.VERCEL_URL
