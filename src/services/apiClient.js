@@ -78,7 +78,7 @@ class ApiClient {
      * Send magic link to email
      */
     sendMagicLink: async (email) => {
-      return this.request('/auth/magic-link', {
+      return this.request('/auth/send-magic-link', {
         method: 'POST',
         body: JSON.stringify({ email }),
       });
@@ -88,7 +88,7 @@ class ApiClient {
      * Verify magic link token and get JWT
      */
     verifyMagicLink: async (token) => {
-      const response = await this.request('/auth/verify', {
+      const response = await this.request('/auth/verify-token', {
         method: 'POST',
         body: JSON.stringify({ token }),
       });
