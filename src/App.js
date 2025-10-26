@@ -53,13 +53,32 @@ const FundraisingApp = () => {
   const handleLogin = (student) => {
     setCurrentStudent(student);
     setIsAuthenticated(true);
+    // Persist user session in localStorage
+    localStorage.setItem('currentStudent', JSON.stringify(student));
   };
 
   const handleLogout = () => {
     setCurrentStudent(null);
     setIsAuthenticated(false);
     setActiveTab('mystats');
+    // Clear user session from localStorage
+    localStorage.removeItem('currentStudent');
   };
+
+  // Auto-login from localStorage on component mount
+  useEffect(() => {
+    const savedStudent = localStorage.getItem('currentStudent');
+    if (savedStudent) {
+      try {
+        const student = JSON.parse(savedStudent);
+        setCurrentStudent(student);
+        setIsAuthenticated(true);
+      } catch (error) {
+        console.error('Failed to restore session:', error);
+        localStorage.removeItem('currentStudent');
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const fetchSheetData = async () => {
