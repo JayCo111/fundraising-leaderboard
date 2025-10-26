@@ -20,18 +20,18 @@ const EveryoneTab = ({ studentsWithTeamStats, currentStudent }) => {
         </div>
       </div>
 
-      {/* Top 10 Leaderboard */}
+      {/* All Students Leaderboard */}
       <div className="bg-white rounded-2xl shadow-2xl p-6">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-bold text-gray-900">Top Performers</h3>
+          <h3 className="text-xl font-bold text-gray-900">All Athletes ({sortedStudents.length})</h3>
           <div className="flex items-center text-sm text-gray-600">
             <TrendingUp className="w-4 h-4 mr-2" />
             Ranked by Total Raised
           </div>
         </div>
 
-        <div className="space-y-3">
-          {sortedStudents.slice(0, 10).map((student, index) => (
+        <div className="space-y-3 max-h-[600px] overflow-y-auto">
+          {sortedStudents.map((student, index) => (
             <div
               key={student.StudentID}
               className={`border-2 rounded-lg p-4 transition-all ${

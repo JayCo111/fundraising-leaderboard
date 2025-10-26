@@ -332,6 +332,25 @@ const programsJson = await programsResponse.json();
   }, []);
 
   const enrichedStudents = useMemo(() => {
+    // Debug: Log unique StudentIDs in Orders vs Students
+    if (ordersData.length > 0 && studentsData.length > 0) {
+      const orderStudentIDs = [...new Set(ordersData.map(o => o.StudentID))];
+      const studentIDs = studentsData.map(s => s.StudentID);
+      const unmatchedOrders = orderStudentIDs.filter(id => !studentIDs.includes(id));
+
+      if (unmatchedOrders.length > 0) {
+        console.warn('⚠️ Orders found for StudentIDs that do not exist in Students sheet:', unmatchedOrders);
+        console.warn('These orders will NOT be counted in the leaderboard');
+      }
+
+      console.log('📊 Data Summary:', {
+        totalStudents: studentsData.length,
+        totalOrders: ordersData.length,
+        studentsWithOrders: studentIDs.filter(id => orderStudentIDs.includes(id)).length,
+        unmatchedOrderCount: unmatchedOrders.length
+      });
+    }
+
     return studentsData.map(student => {
       const studentOrders = ordersData?.filter(o => o.StudentID === student.StudentID) || [];
       const NetQty = studentOrders.reduce((sum, o) => sum + (o.Status === 'Refunded' ? 0 : o.Quantity), 0);
@@ -340,7 +359,7 @@ const programsJson = await programsResponse.json();
       const FullName = `${student.FirstName} ${student.LastName}`;
       const studentReferrals = referralsData?.filter(r => r.StudentID === student.StudentID) || [];
       const ReferralPoints = studentReferrals.reduce((sum, r) => sum + r.Points, 0);
-      
+
       return {
         ...student,
         FullName,
