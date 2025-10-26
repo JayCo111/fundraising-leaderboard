@@ -80,6 +80,23 @@ const FundraisingApp = () => {
     }
   }, []);
 
+  // Sync currentStudent with fresh data from Google Sheets after data loads
+  useEffect(() => {
+    if (currentStudent && studentsWithTeamStats.length > 0) {
+      // Find the updated student data by StudentID (use enriched data with calculations)
+      const updatedStudent = studentsWithTeamStats.find(
+        s => s.StudentID === currentStudent.StudentID
+      );
+
+      if (updatedStudent) {
+        // Update currentStudent with fresh data from Google Sheets
+        setCurrentStudent(updatedStudent);
+        // Update localStorage with fresh data
+        localStorage.setItem('currentStudent', JSON.stringify(updatedStudent));
+      }
+    }
+  }, [studentsWithTeamStats, currentStudent]); // Run whenever enriched data changes
+
   useEffect(() => {
     const fetchSheetData = async () => {
       // Check if we have API credentials
