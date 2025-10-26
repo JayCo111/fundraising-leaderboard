@@ -4,7 +4,8 @@
  * Provides a clean interface to interact with the Node.js API
  */
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api/v1';
+// Use Vercel serverless functions (same domain, no CORS issues)
+const API_URL = '/api';
 
 class ApiClient {
   constructor() {

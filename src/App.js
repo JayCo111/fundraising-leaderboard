@@ -63,8 +63,14 @@ const FundraisingApp = () => {
 
   useEffect(() => {
     const fetchSheetData = async () => {
-      // Only fetch data if we have API credentials
+      // Check if we have API credentials
       if (!GOOGLE_SHEETS_CONFIG.SHEET_ID || !GOOGLE_SHEETS_CONFIG.API_KEY) {
+        console.warn('Google Sheets credentials not configured. Using demo data.');
+        console.warn('Missing:', {
+          SHEET_ID: !GOOGLE_SHEETS_CONFIG.SHEET_ID,
+          API_KEY: !GOOGLE_SHEETS_CONFIG.API_KEY
+        });
+
         // Set demo data for testing when Google Sheets isn't configured
         setStudentsData([
           {
@@ -286,7 +292,18 @@ const programsJson = await programsResponse.json();
 
         setError(null);
       } catch (err) {
-        setError('Failed to load data from Google Sheets');
+        console.error('Error fetching Google Sheets data:', err);
+
+        // Provide more specific error messages
+        if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
+          setError('Network error: Unable to connect to Google Sheets. Please check your internet connection or verify that the Google Sheets API is accessible.');
+        } else if (err.message.includes('403')) {
+          setError('Permission denied: The Google Sheets API key may be invalid or the sheet may not be publicly accessible.');
+        } else if (err.message.includes('404')) {
+          setError('Sheet not found: The Google Sheet ID may be incorrect.');
+        } else {
+          setError(`Failed to load data from Google Sheets: ${err.message || 'Unknown error'}`);
+        }
       } finally {
         setLoading(false);
       }
