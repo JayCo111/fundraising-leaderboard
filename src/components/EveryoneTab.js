@@ -7,6 +7,55 @@ const EveryoneTab = ({ studentsWithTeamStats, currentStudent }) => {
   // Sort all students by total raised
   const sortedStudents = [...studentsWithTeamStats].sort((a, b) => (b.NetRaised || 0) - (a.NetRaised || 0));
 
+  // Split into top 10 and remaining
+  const top10Students = sortedStudents.slice(0, 10);
+  const remainingStudents = sortedStudents.slice(10);
+
+  // Render student card helper function
+  const renderStudentCard = (student, index) => (
+    <div
+      key={student.StudentID}
+      className={`border-2 rounded-lg p-4 transition-all ${
+        student.StudentID === currentStudent?.StudentID
+          ? 'border-cyan-500 bg-cyan-50 shadow-lg'
+          : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
+      }`}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
+            index === 0 ? 'bg-yellow-400 text-yellow-900' :
+            index === 1 ? 'bg-gray-300 text-gray-700' :
+            index === 2 ? 'bg-orange-400 text-orange-900' :
+            'bg-gray-200 text-gray-600'
+          }`}>
+            {index === 0 ? <Trophy className="w-5 h-5" /> :
+             index === 1 ? <Award className="w-5 h-5" /> :
+             index === 2 ? <Award className="w-5 h-5" /> :
+             index + 1}
+          </div>
+          <div>
+            <div className={`font-semibold ${
+              student.StudentID === currentStudent?.StudentID ? 'text-cyan-700' : 'text-gray-900'
+            }`}>
+              {student.FirstName} {student.LastName}
+              {student.StudentID === currentStudent?.StudentID && (
+                <span className="ml-2 text-xs bg-cyan-100 text-cyan-700 px-2 py-1 rounded-full">You</span>
+              )}
+            </div>
+            <div className="text-sm text-gray-600">
+              {student.Team} • {student.CardsSold || 0} cards
+            </div>
+          </div>
+        </div>
+        <div className="text-right">
+          <div className="text-lg font-bold text-gray-900">${student.NetRaised || 0}</div>
+          <div className="text-sm text-gray-600">{student.CardsSold || 0} cards</div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="space-y-6">
       {/* Program Overview */}
@@ -20,62 +69,37 @@ const EveryoneTab = ({ studentsWithTeamStats, currentStudent }) => {
         </div>
       </div>
 
-      {/* All Students Leaderboard */}
+      {/* Top 10 Leaderboard */}
       <div className="bg-white rounded-2xl shadow-2xl p-6">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-bold text-gray-900">All Athletes ({sortedStudents.length})</h3>
+          <h3 className="text-xl font-bold text-gray-900">🏆 Top 10 Performers</h3>
           <div className="flex items-center text-sm text-gray-600">
             <TrendingUp className="w-4 h-4 mr-2" />
             Ranked by Total Raised
           </div>
         </div>
 
-        <div className="space-y-3 max-h-[600px] overflow-y-auto">
-          {sortedStudents.map((student, index) => (
-            <div
-              key={student.StudentID}
-              className={`border-2 rounded-lg p-4 transition-all ${
-                student.StudentID === currentStudent?.StudentID
-                  ? 'border-cyan-500 bg-cyan-50 shadow-lg'
-                  : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
-                    index === 0 ? 'bg-yellow-400 text-yellow-900' :
-                    index === 1 ? 'bg-gray-300 text-gray-700' :
-                    index === 2 ? 'bg-orange-400 text-orange-900' :
-                    'bg-gray-200 text-gray-600'
-                  }`}>
-                    {index === 0 ? <Trophy className="w-5 h-5" /> :
-                     index === 1 ? <Award className="w-5 h-5" /> :
-                     index === 2 ? <Award className="w-5 h-5" /> :
-                     index + 1}
-                  </div>
-                  <div>
-                    <div className={`font-semibold ${
-                      student.StudentID === currentStudent?.StudentID ? 'text-cyan-700' : 'text-gray-900'
-                    }`}>
-                      {student.FirstName} {student.LastName}
-                      {student.StudentID === currentStudent?.StudentID && (
-                        <span className="ml-2 text-xs bg-cyan-100 text-cyan-700 px-2 py-1 rounded-full">You</span>
-                      )}
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      {student.Team} • {student.CardsSold || 0} cards
-                    </div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-lg font-bold text-gray-900">${student.NetRaised || 0}</div>
-                  <div className="text-sm text-gray-600">{student.CardsSold || 0} cards</div>
-                </div>
-              </div>
-            </div>
-          ))}
+        <div className="space-y-3">
+          {top10Students.map((student, index) => renderStudentCard(student, index))}
         </div>
       </div>
+
+      {/* All Other Athletes */}
+      {remainingStudents.length > 0 && (
+        <div className="bg-white rounded-2xl shadow-2xl p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-bold text-gray-900">All Other Athletes ({remainingStudents.length})</h3>
+            <div className="flex items-center text-sm text-gray-600">
+              <Users className="w-4 h-4 mr-2" />
+              Ranks 11+
+            </div>
+          </div>
+
+          <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
+            {remainingStudents.map((student, index) => renderStudentCard(student, index + 10))}
+          </div>
+        </div>
+      )}
 
       {/* Your Position */}
       {currentStudent && (
