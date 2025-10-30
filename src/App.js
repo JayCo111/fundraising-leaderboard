@@ -682,10 +682,10 @@ const programsJson = await programsResponse.json();
                   </div>
                 </div>
 
-                {/* Progress to 10 Cards Sold */}
+                {/* Progress to 10 Cards Sold for Limited IDOL Tee Prize */}
                 <div>
                   <div className="flex justify-between text-sm mb-2">
-                    <span className="font-semibold text-gray-700">Progress to 10 Cards Sold</span>
+                    <span className="font-semibold text-gray-700">Progress to 10 Cards Sold for Limited IDOL Tee Prize!</span>
                     <span className="font-bold text-purple-600">
                       {currentStudent.CardsSold} of 10 cards
                     </span>
@@ -704,10 +704,10 @@ const programsJson = await programsResponse.json();
                   </div>
                 </div>
 
-                {/* Progress to 20 Cards Sold */}
+                {/* Progress to 20 Cards Sold for Limited IDOL Hoodie Prize */}
                 <div>
                   <div className="flex justify-between text-sm mb-2">
-                    <span className="font-semibold text-gray-700">Progress to 20 Cards Sold</span>
+                    <span className="font-semibold text-gray-700">Progress to 20 Cards Sold for Limited IDOL Hoodie Prize!</span>
                     <span className="font-bold text-orange-600">
                       {currentStudent.CardsSold} of 20 cards
                     </span>
