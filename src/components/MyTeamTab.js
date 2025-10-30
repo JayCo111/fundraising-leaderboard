@@ -104,31 +104,65 @@ const MyTeamTab = ({ currentStudent }) => {
 
       {/* Team Progress */}
       <div className="bg-white rounded-2xl shadow-2xl p-6">
-        <h3 className="text-xl font-bold text-gray-900 mb-4">Team Progress</h3>
+        <h3 className="text-xl font-bold text-gray-900 mb-4">Team Goals</h3>
         <div className="space-y-4">
+          {/* Team Goal 1: 100 Cards */}
           <div>
             <div className="flex justify-between text-sm font-semibold text-gray-700 mb-2">
-              <span>Revenue Goal</span>
-              <span>${currentStudent.Team_Net || 0} / $10,000</span>
+              <span>Team Goal 1: 100 Cards Sold</span>
+              <span>{currentStudent.Team_Cards || 0} / 100 cards</span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-3">
-              <div 
-                className="bg-gradient-to-r from-cyan-400 to-blue-500 h-3 rounded-full transition-all duration-500"
-                style={{ width: `${Math.min(((currentStudent.Team_Net || 0) / 10000) * 100, 100)}%` }}
-              ></div>
+            <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+              <div
+                className="bg-gradient-to-r from-purple-400 via-purple-500 to-purple-600 h-4 rounded-full transition-all duration-500 flex items-center justify-end pr-2 shadow-lg shadow-purple-500/50"
+                style={{ width: `${Math.min(((currentStudent.Team_Cards || 0) / 100) * 100, 100)}%` }}
+              >
+                {(currentStudent.Team_Cards || 0) > 5 && (
+                  <span className="text-xs font-bold text-white">
+                    {Math.round(((currentStudent.Team_Cards || 0) / 100) * 100)}%
+                  </span>
+                )}
+              </div>
             </div>
           </div>
-          
+
+          {/* Team Goal 2: 200 Cards */}
           <div>
             <div className="flex justify-between text-sm font-semibold text-gray-700 mb-2">
-              <span>Cards Goal</span>
-              <span>{currentStudent.Team_Cards || 0} / 100</span>
+              <span>Team Goal 2: 200 Cards Sold</span>
+              <span>{currentStudent.Team_Cards || 0} / 200 cards</span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-3">
-              <div 
-                className="bg-gradient-to-r from-blue-400 to-fuchsia-500 h-3 rounded-full transition-all duration-500"
-                style={{ width: `${Math.min(((currentStudent.Team_Cards || 0) / 100) * 100, 100)}%` }}
-              ></div>
+            <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+              <div
+                className="bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 h-4 rounded-full transition-all duration-500 flex items-center justify-end pr-2 shadow-lg shadow-blue-500/50"
+                style={{ width: `${Math.min(((currentStudent.Team_Cards || 0) / 200) * 100, 100)}%` }}
+              >
+                {(currentStudent.Team_Cards || 0) > 10 && (
+                  <span className="text-xs font-bold text-white">
+                    {Math.round(((currentStudent.Team_Cards || 0) / 200) * 100)}%
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Team Goal 3: 300 Cards */}
+          <div>
+            <div className="flex justify-between text-sm font-semibold text-gray-700 mb-2">
+              <span>Team Goal 3: 300 Cards Sold</span>
+              <span>{currentStudent.Team_Cards || 0} / 300 cards</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+              <div
+                className="bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 h-4 rounded-full transition-all duration-500 flex items-center justify-end pr-2 shadow-lg shadow-orange-500/50"
+                style={{ width: `${Math.min(((currentStudent.Team_Cards || 0) / 300) * 100, 100)}%` }}
+              >
+                {(currentStudent.Team_Cards || 0) > 15 && (
+                  <span className="text-xs font-bold text-white">
+                    {Math.round(((currentStudent.Team_Cards || 0) / 300) * 100)}%
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </div>
