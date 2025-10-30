@@ -109,6 +109,11 @@ export default async function handler(req, res) {
     const magicLink = `${siteUrl}?token=${token}`;
 
     // Send email via Resend
+    console.log('📧 Attempting to send email via Resend:', {
+      from: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
+      to: cleanEmail.replace(/(.{2})(.*)(@.*)/, '$1***$3')
+    });
+
     const emailResult = await resend.emails.send({
       from: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
       to: cleanEmail,
@@ -165,10 +170,16 @@ export default async function handler(req, res) {
     });
 
     if (emailResult.error) {
-      console.error('Resend error:', emailResult.error);
+      console.error('❌ Resend API error:', {
+        error: emailResult.error,
+        message: emailResult.error?.message,
+        statusCode: emailResult.error?.statusCode,
+        name: emailResult.error?.name
+      });
       return res.status(500).json({
         success: false,
-        error: 'Failed to send email. Please try again.'
+        error: 'Failed to send email. Please try again.',
+        details: process.env.NODE_ENV === 'development' ? emailResult.error : undefined
       });
     }
 
@@ -184,10 +195,25 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error('Send magic link error:', error);
+    console.error('❌ Send magic link error:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
     return res.status(500).json({
       success: false,
-      error: 'Something went wrong. Please try again.'
+      error: 'Something went wrong. Please try again.',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
+  } finally {
+    // Clean up Redis connection if needed
+    if (redisClient) {
+      try {
+        await redisClient.quit();
+        redisClient = null;
+      } catch (err) {
+        console.error('Redis cleanup error:', err);
+      }
+    }
   }
 }
