@@ -654,7 +654,9 @@ const programsJson = await programsResponse.json();
 
       <div className="bg-white shadow-lg border-b-2 border-cyan-200">
   <div className="max-w-6xl mx-auto flex overflow-x-auto">
-    {['mystats', 'myteam', 'everyone', 'teamvsteam', 'referrals', 'profile'].map(tab => (
+    {['mystats', 'myteam', 'everyone', 'teamvsteam', 'referrals', 'profile']
+      .filter(tab => tab !== 'referrals' || isAdmin) // Hide Referrals tab for non-admin users
+      .map(tab => (
       <button
         key={tab}
         onClick={() => setActiveTab(tab)}
@@ -849,7 +851,7 @@ const programsJson = await programsResponse.json();
           <TeamVsTeamTab currentStudent={currentStudent} studentsWithTeamStats={studentsWithTeamStats} />
         )}
 
-        {activeTab === 'referrals' && currentStudent && (
+        {activeTab === 'referrals' && currentStudent && isAdmin && (
           <ReferralsTab currentStudent={currentStudent} />
         )}
 
