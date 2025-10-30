@@ -100,10 +100,9 @@ export default async function handler(req, res) {
     const redis = await getRedisClient();
     await redis.setEx(`magic-link:${token}`, 900, cleanEmail); // expires in 900 seconds (15 minutes)
 
-    // Get the site URL (Vercel provides this automatically)
-    const siteUrl = process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : 'http://localhost:3000';
+    // Get the site URL - prioritize production URL to avoid Vercel login redirects
+    const siteUrl = process.env.PRODUCTION_URL ||
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
 
     // Create magic link
     const magicLink = `${siteUrl}?token=${token}`;
