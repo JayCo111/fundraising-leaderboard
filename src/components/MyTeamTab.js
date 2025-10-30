@@ -4,6 +4,14 @@ import { Trophy, Users, Target, TrendingUp, DollarSign } from 'lucide-react';
 const MyTeamTab = ({ currentStudent }) => {
   if (!currentStudent) return null;
 
+  // Determine team goals based on team name
+  const highGoalTeams = ['Gems', 'Jewels', 'Emeralds', 'Jade', 'Falcons', 'Sunstones'];
+  const isHighGoalTeam = highGoalTeams.includes(currentStudent.Team);
+
+  const goal1 = isHighGoalTeam ? 200 : 100;
+  const goal2 = isHighGoalTeam ? 300 : 200;
+  const goal3 = isHighGoalTeam ? 400 : 300;
+
   return (
     <div className="space-y-6">
       {/* Team Overview Cards */}
@@ -106,60 +114,60 @@ const MyTeamTab = ({ currentStudent }) => {
       <div className="bg-white rounded-2xl shadow-2xl p-6">
         <h3 className="text-xl font-bold text-gray-900 mb-4">Team Goals</h3>
         <div className="space-y-4">
-          {/* Team Goal 1: 100 Cards */}
+          {/* Team Goal 1 */}
           <div>
             <div className="flex justify-between text-sm font-semibold text-gray-700 mb-2">
-              <span>Team Goal 1: 100 Cards Sold</span>
-              <span>{currentStudent.Team_Cards || 0} / 100 cards</span>
+              <span>Team Goal 1: {goal1} Cards Sold</span>
+              <span>{currentStudent.Team_Cards || 0} / {goal1} cards</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
               <div
                 className="bg-gradient-to-r from-purple-400 via-purple-500 to-purple-600 h-4 rounded-full transition-all duration-500 flex items-center justify-end pr-2 shadow-lg shadow-purple-500/50"
-                style={{ width: `${Math.min(((currentStudent.Team_Cards || 0) / 100) * 100, 100)}%` }}
+                style={{ width: `${Math.min(((currentStudent.Team_Cards || 0) / goal1) * 100, 100)}%` }}
               >
                 {(currentStudent.Team_Cards || 0) > 5 && (
                   <span className="text-xs font-bold text-white">
-                    {Math.round(((currentStudent.Team_Cards || 0) / 100) * 100)}%
+                    {Math.round(((currentStudent.Team_Cards || 0) / goal1) * 100)}%
                   </span>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Team Goal 2: 200 Cards */}
+          {/* Team Goal 2 */}
           <div>
             <div className="flex justify-between text-sm font-semibold text-gray-700 mb-2">
-              <span>Team Goal 2: 200 Cards Sold</span>
-              <span>{currentStudent.Team_Cards || 0} / 200 cards</span>
+              <span>Team Goal 2: {goal2} Cards Sold</span>
+              <span>{currentStudent.Team_Cards || 0} / {goal2} cards</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
               <div
                 className="bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 h-4 rounded-full transition-all duration-500 flex items-center justify-end pr-2 shadow-lg shadow-blue-500/50"
-                style={{ width: `${Math.min(((currentStudent.Team_Cards || 0) / 200) * 100, 100)}%` }}
+                style={{ width: `${Math.min(((currentStudent.Team_Cards || 0) / goal2) * 100, 100)}%` }}
               >
                 {(currentStudent.Team_Cards || 0) > 10 && (
                   <span className="text-xs font-bold text-white">
-                    {Math.round(((currentStudent.Team_Cards || 0) / 200) * 100)}%
+                    {Math.round(((currentStudent.Team_Cards || 0) / goal2) * 100)}%
                   </span>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Team Goal 3: 300 Cards */}
+          {/* Team Goal 3 */}
           <div>
             <div className="flex justify-between text-sm font-semibold text-gray-700 mb-2">
-              <span>Team Goal 3: 300 Cards Sold</span>
-              <span>{currentStudent.Team_Cards || 0} / 300 cards</span>
+              <span>Team Goal 3: {goal3} Cards Sold</span>
+              <span>{currentStudent.Team_Cards || 0} / {goal3} cards</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
               <div
                 className="bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 h-4 rounded-full transition-all duration-500 flex items-center justify-end pr-2 shadow-lg shadow-orange-500/50"
-                style={{ width: `${Math.min(((currentStudent.Team_Cards || 0) / 300) * 100, 100)}%` }}
+                style={{ width: `${Math.min(((currentStudent.Team_Cards || 0) / goal3) * 100, 100)}%` }}
               >
                 {(currentStudent.Team_Cards || 0) > 15 && (
                   <span className="text-xs font-bold text-white">
-                    {Math.round(((currentStudent.Team_Cards || 0) / 300) * 100)}%
+                    {Math.round(((currentStudent.Team_Cards || 0) / goal3) * 100)}%
                   </span>
                 )}
               </div>
