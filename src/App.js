@@ -659,23 +659,70 @@ const programsJson = await programsResponse.json();
                 )}
               </div>
 
-              <div className="mb-6">
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="font-semibold text-gray-700">Progress to Goal</span>
-                  <span className="font-bold text-cyan-600">
-                    ${currentStudent.NetRaised} of ${currentStudent.Goal_$}
-                  </span>
+              <div className="mb-6 space-y-4">
+                {/* Progress to Fundraising Goal */}
+                <div>
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className="font-semibold text-gray-700">Progress to Goal</span>
+                    <span className="font-bold text-cyan-600">
+                      ${currentStudent.NetRaised} of ${currentStudent.Goal_$}
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-6 overflow-hidden">
+                    <div
+                      className="bg-gradient-to-r from-cyan-400 via-blue-500 to-blue-600 h-full rounded-full transition-all duration-500 flex items-center justify-end pr-3 shadow-lg shadow-cyan-500/50"
+                      style={{ width: `${Math.min(currentStudent.ProgressPct * 100, 100)}%` }}
+                    >
+                      {currentStudent.ProgressPct > 0.1 && (
+                        <span className="text-xs font-bold text-white">
+                          {Math.round(currentStudent.ProgressPct * 100)}%
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-6 overflow-hidden">
-                  <div
-                    className="bg-gradient-to-r from-cyan-400 via-blue-500 to-blue-600 h-full rounded-full transition-all duration-500 flex items-center justify-end pr-3 shadow-lg shadow-cyan-500/50"
-                    style={{ width: `${Math.min(currentStudent.ProgressPct * 100, 100)}%` }}
-                  >
-                    {currentStudent.ProgressPct > 0.1 && (
-                      <span className="text-xs font-bold text-white">
-                        {Math.round(currentStudent.ProgressPct * 100)}%
-                      </span>
-                    )}
+
+                {/* Progress to 10 Cards Sold */}
+                <div>
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className="font-semibold text-gray-700">Progress to 10 Cards Sold</span>
+                    <span className="font-bold text-purple-600">
+                      {currentStudent.CardsSold} of 10 cards
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-6 overflow-hidden">
+                    <div
+                      className="bg-gradient-to-r from-purple-400 via-purple-500 to-purple-600 h-full rounded-full transition-all duration-500 flex items-center justify-end pr-3 shadow-lg shadow-purple-500/50"
+                      style={{ width: `${Math.min((currentStudent.CardsSold / 10) * 100, 100)}%` }}
+                    >
+                      {currentStudent.CardsSold > 1 && (
+                        <span className="text-xs font-bold text-white">
+                          {Math.round((currentStudent.CardsSold / 10) * 100)}%
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Progress to 20 Cards Sold */}
+                <div>
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className="font-semibold text-gray-700">Progress to 20 Cards Sold</span>
+                    <span className="font-bold text-orange-600">
+                      {currentStudent.CardsSold} of 20 cards
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-6 overflow-hidden">
+                    <div
+                      className="bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 h-full rounded-full transition-all duration-500 flex items-center justify-end pr-3 shadow-lg shadow-orange-500/50"
+                      style={{ width: `${Math.min((currentStudent.CardsSold / 20) * 100, 100)}%` }}
+                    >
+                      {currentStudent.CardsSold > 2 && (
+                        <span className="text-xs font-bold text-white">
+                          {Math.round((currentStudent.CardsSold / 20) * 100)}%
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
