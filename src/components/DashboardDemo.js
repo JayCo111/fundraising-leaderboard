@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Role } from '../types';
 import DashboardRouter from './DashboardRouter';
+import { ArrowLeft } from 'lucide-react';
 
-const DashboardDemo = () => {
+const DashboardDemo = ({ isAdmin = false, onBack = null }) => {
   const [selectedRole, setSelectedRole] = useState(Role.SALES_REP);
   const [showDemo, setShowDemo] = useState(false);
 
@@ -28,12 +29,23 @@ const DashboardDemo = () => {
               <h1 className="text-2xl font-bold text-gray-900">SportsRaiser Platform Demo</h1>
               <p className="text-gray-600">Role: {roleOptions.find(r => r.value === selectedRole)?.label}</p>
             </div>
-            <button
-              onClick={() => setShowDemo(false)}
-              className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white font-semibold rounded-xl transition-colors"
-            >
-              Back to Role Selection
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowDemo(false)}
+                className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white font-semibold rounded-xl transition-colors"
+              >
+                Back to Role Selection
+              </button>
+              {onBack && (
+                <button
+                  onClick={onBack}
+                  className="flex items-center gap-2 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold rounded-xl transition-colors"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Back to Leaderboard
+                </button>
+              )}
+            </div>
           </div>
         </div>
         <DashboardRouter />
@@ -44,6 +56,19 @@ const DashboardDemo = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Back to Leaderboard button */}
+        {onBack && (
+          <div className="mb-6">
+            <button
+              onClick={onBack}
+              className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 font-semibold rounded-xl border-2 border-gray-200 transition-all"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to Leaderboard
+            </button>
+          </div>
+        )}
+
         <div className="text-center mb-12">
           <h1 className="text-4xl font-black text-gray-900 mb-4">
             SportsRaiser Platform

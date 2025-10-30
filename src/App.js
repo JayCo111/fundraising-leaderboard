@@ -61,9 +61,15 @@ const FundraisingApp = () => {
     setCurrentStudent(null);
     setIsAuthenticated(false);
     setActiveTab('mystats');
+    setShowPlatformDemo(false);
     // Clear user session from localStorage
     localStorage.removeItem('currentStudent');
   };
+
+  // Check if current user is admin (josejr.corp@gmail.com)
+  const isAdmin = useMemo(() => {
+    return currentStudent?.ParentEmail?.toLowerCase() === 'josejr.corp@gmail.com';
+  }, [currentStudent]);
 
   // Auto-login from localStorage on component mount
   useEffect(() => {
@@ -573,9 +579,31 @@ const programsJson = await programsResponse.json();
     );
   }
 
-  // Show platform demo if requested
+  // Show platform demo if requested (admin only)
   if (showPlatformDemo) {
-    return <DashboardDemo />;
+    if (!isAdmin) {
+      // Non-admin trying to access platform - show access denied
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-cyan-100 via-blue-50 to-fuchsia-100 flex items-center justify-center">
+          <div className="max-w-md mx-auto p-8 bg-white rounded-2xl shadow-2xl text-center">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertCircle className="w-8 h-8 text-red-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h2>
+            <p className="text-gray-600 mb-6">
+              You do not have permission to access the SportsRaiser Platform.
+            </p>
+            <button
+              onClick={() => setShowPlatformDemo(false)}
+              className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all"
+            >
+              Return to Leaderboard
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return <DashboardDemo isAdmin={isAdmin} onBack={() => setShowPlatformDemo(false)} />;
   }
 
   // Show login page if not authenticated
@@ -596,13 +624,16 @@ const programsJson = await programsResponse.json();
               Signed in as: {currentStudent?.ParentEmail}
             </div>
             <div className="flex items-center gap-3">
-              <button
-                onClick={() => setShowPlatformDemo(true)}
-                className="flex items-center gap-2 px-3 py-1 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg transition-all"
-              >
-                <Trophy className="w-4 h-4" />
-                Platform Demo
-              </button>
+              {/* Platform Demo button - Admin Only */}
+              {isAdmin && (
+                <button
+                  onClick={() => setShowPlatformDemo(true)}
+                  className="flex items-center gap-2 px-3 py-1 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg transition-all"
+                >
+                  <Trophy className="w-4 h-4" />
+                  Platform Demo
+                </button>
+              )}
               <button
                 onClick={handleLogout}
                 className="flex items-center gap-2 px-3 py-1 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg transition-all"
