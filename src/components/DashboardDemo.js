@@ -3,9 +3,21 @@ import { Role } from '../types';
 import DashboardRouter from './DashboardRouter';
 import { ArrowLeft, LogOut } from 'lucide-react';
 
-const DashboardDemo = ({ isAdmin = false, onBack = null, onLogout = null }) => {
+const DashboardDemo = ({
+  isAdmin = false,
+  onBack = null,
+  onLogout = null,
+  currentUser = null,
+  studentsData = [],
+  ordersData = [],
+  referralsData = [],
+  programsData = []
+}) => {
   const [selectedRole, setSelectedRole] = useState(null);
   const [showDemo, setShowDemo] = useState(false);
+
+  // Use real data if provided, otherwise fall back to mock data
+  const hasRealData = studentsData.length > 0 || ordersData.length > 0;
 
   // Mock user data for different roles
   const getMockUser = (role) => {
@@ -142,14 +154,37 @@ const DashboardDemo = ({ isAdmin = false, onBack = null, onLogout = null }) => {
   ];
 
   if (showDemo && selectedRole) {
-    const mockUser = getMockUser(selectedRole);
+    // Use real user if available, otherwise create mock user
+    let demoUser;
+    if (hasRealData && currentUser) {
+      // Create a user object for the selected role using real data
+      const uniqueTeams = [...new Set(programsData.map(p => p.Team).filter(Boolean))];
+      const uniquePrograms = [...new Set(programsData.map(p => p.Program).filter(Boolean))];
+      const uniqueOrgs = [...new Set(programsData.map(p => p.Organization).filter(Boolean))];
+
+      demoUser = {
+        ...currentUser,
+        role: selectedRole,
+        teams: selectedRole === Role.HEAD_COACH ? uniqueTeams.slice(0, 2) : [],
+        programs: selectedRole === Role.PROGRAM_DIRECTOR || selectedRole === Role.ORG_OWNER ? uniquePrograms : [],
+        organizations: selectedRole === Role.ORG_OWNER ? uniqueOrgs : [],
+      };
+    } else {
+      demoUser = getMockUser(selectedRole);
+    }
+
+    // Use real data if available, otherwise use mock data
+    const displayStudentsData = hasRealData ? studentsData : mockStudentsData;
+    const displayOrdersData = hasRealData ? ordersData : mockOrdersData;
+    const displayReferralsData = hasRealData ? referralsData : mockReferralsData;
+    const displayProgramsData = hasRealData ? programsData : mockProgramsData;
 
     return (
       <div>
         <div className="bg-white shadow-lg border-b-2 border-cyan-200 p-4">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">SportsRaiser Platform Demo</h1>
+              <h1 className="text-2xl font-bold text-gray-900">SportsRaiser Platform {hasRealData ? '(Live Data)' : 'Demo'}</h1>
               <p className="text-gray-600">Role: {roleOptions.find(r => r.value === selectedRole)?.label}</p>
             </div>
             <div className="flex items-center gap-3">
@@ -185,11 +220,11 @@ const DashboardDemo = ({ isAdmin = false, onBack = null, onLogout = null }) => {
           </div>
         </div>
         <DashboardRouter
-          user={mockUser}
-          studentsData={mockStudentsData}
-          ordersData={mockOrdersData}
-          referralsData={mockReferralsData}
-          programsData={mockProgramsData}
+          user={demoUser}
+          studentsData={displayStudentsData}
+          ordersData={displayOrdersData}
+          referralsData={displayReferralsData}
+          programsData={displayProgramsData}
           onLogout={() => {
             setShowDemo(false);
             setSelectedRole(null);

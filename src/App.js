@@ -734,6 +734,12 @@ const programsJson = await programsResponse.json();
           <DashboardDemo
             isAdmin={true}
             onBack={() => setSelectedDashboard(null)}
+            onLogout={handleLogout}
+            currentUser={currentUser}
+            studentsData={studentsWithTeamStats}
+            ordersData={ordersData}
+            referralsData={referralsData}
+            programsData={programsData}
           />
         );
       }
