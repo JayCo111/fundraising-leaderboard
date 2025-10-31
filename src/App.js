@@ -272,7 +272,9 @@ const programsJson = await programsResponse.json();
             QR_URL: row[7] || '',
             Avatar_URL: row[8] || '',
             Program: row[9] || '',
-            QR_Link: row[10] || '' // Column K
+            QR_Link: row[10] || '', // Column K
+            RegisteredDate: row[11] || '', // Column L
+            RegistrationStatus: row[12] || 'NOT_REGISTERED' // Column M (default to NOT_REGISTERED)
           }));
           setStudentsData(students);
         }
@@ -302,7 +304,9 @@ const programsJson = await programsResponse.json();
             Stage: row[6] || 'Contacted',
             Points: parseFloat(row[7]) || 0,
             DateAdded: row[8] || '',
-            LastUpdated: row[9] || ''
+            LastUpdated: row[9] || '',
+            ReferrerID: row[10] || '', // Column K
+            ReferrerType: row[11] || 'STUDENT' // Column L (STUDENT or COACH)
           }));
           setReferralsData(referrals);
         }
@@ -310,7 +314,24 @@ const programsJson = await programsResponse.json();
         if (programsJson.values) {
           const programs = programsJson.values.map(row => ({
             Team: row[0] || '',
-            Program: row[1] || ''
+            Program: row[1] || '',
+            Organization: row[2] || '',
+            Coach1_Email: row[3] ? row[3].toLowerCase().trim() : '',
+            Coach2_Email: row[4] ? row[4].toLowerCase().trim() : '',
+            Coach3_Email: row[5] ? row[5].toLowerCase().trim() : '',
+            Coach4_Email: row[6] ? row[6].toLowerCase().trim() : '',
+            Director1_Email: row[7] ? row[7].toLowerCase().trim() : '',
+            Director2_Email: row[8] ? row[8].toLowerCase().trim() : '',
+            Director3_Email: row[9] ? row[9].toLowerCase().trim() : '',
+            Coach1_Name: row[10] || '',
+            Coach2_Name: row[11] || '',
+            Coach3_Name: row[12] || '',
+            Coach4_Name: row[13] || '',
+            Director1_Name: row[14] || '',
+            Director2_Name: row[15] || '',
+            Director3_Name: row[16] || '',
+            OrgDirector_Email: row[17] ? row[17].toLowerCase().trim() : '',
+            OrgDirector_Name: row[18] || ''
           }));
           setProgramsData(programs);
         }
