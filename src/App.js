@@ -15,6 +15,8 @@ import { useState, useMemo, useEffect } from 'react';
 import { Trophy, TrendingUp, Users, DollarSign, Share2, QrCode, AlertCircle, UserPlus, CheckCircle, Phone, Mail, Building, LogOut } from 'lucide-react';
 import { GOOGLE_SHEETS_CONFIG } from './config/googleSheets';
 import { saveReferral, validateReferralForm } from './utils/googleSheetsWrite';
+import { authenticateUser, Role } from './services/authService';
+import { filterStudentsByRole, filterOrdersByRole, filterReferralsByRole } from './services/dataFilter';
 import LoginPage from './components/LoginPage';
 import ProfilePage from './components/ProfilePage';
 import MyTeamTab from './components/MyTeamTab';
@@ -22,12 +24,14 @@ import TeamVsTeamTab from './components/TeamVsTeamTab';
 import EveryoneTab from './components/EveryoneTab';
 import ReferralsTab from './components/ReferralsTab';
 import DashboardDemo from './components/DashboardDemo';
+import DashboardRouter from './components/DashboardRouter';
 
 const FundraisingApp = () => {
   const [studentsData, setStudentsData] = useState([]);
   const [ordersData, setOrdersData] = useState([]);
   const [referralsData, setReferralsData] = useState([]);
-  const [, setProgramsData] = useState([]);
+  const [programsData, setProgramsData] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null); // New: replaces currentStudent for RBAC
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -50,35 +54,96 @@ const FundraisingApp = () => {
   const [referralSaveMessage, setReferralSaveMessage] = useState('');
 
   // Authentication handlers
-  const handleLogin = (student) => {
-    setCurrentStudent(student);
-    setIsAuthenticated(true);
-    // Persist user session in localStorage
-    localStorage.setItem('currentStudent', JSON.stringify(student));
+  const handleLogin = (emailOrStudent) => {
+    // emailOrStudent can be either:
+    // 1. Email string (from magic link or direct login)
+    // 2. Student object (legacy parent/student login)
+
+    let email;
+    if (typeof emailOrStudent === 'string') {
+      email = emailOrStudent;
+    } else if (emailOrStudent?.ParentEmail) {
+      // Legacy student object
+      email = emailOrStudent.ParentEmail;
+      setCurrentStudent(emailOrStudent); // Keep for backward compatibility
+    } else {
+      console.error('Invalid login parameter');
+      return;
+    }
+
+    // Authenticate user and determine role
+    const user = authenticateUser(email, programsData, studentsData);
+
+    if (user && user.role) {
+      setCurrentUser(user);
+      setIsAuthenticated(true);
+
+      // If user is a parent/student, also set currentStudent for backward compatibility
+      if (user.role === Role.PARENT_STUDENT && user.studentId) {
+        const student = studentsData.find(s => s.StudentID === user.studentId);
+        if (student) {
+          setCurrentStudent(student);
+        }
+      }
+
+      // Persist user session in localStorage
+      localStorage.setItem('currentUser', JSON.stringify(user));
+      if (currentStudent) {
+        localStorage.setItem('currentStudent', JSON.stringify(currentStudent));
+      }
+    } else {
+      setError(user?.error || 'Authentication failed');
+    }
   };
 
   const handleLogout = () => {
+    setCurrentUser(null);
     setCurrentStudent(null);
     setIsAuthenticated(false);
     setActiveTab('mystats');
     setShowPlatformDemo(false);
     // Clear user session from localStorage
+    localStorage.removeItem('currentUser');
     localStorage.removeItem('currentStudent');
   };
 
-  // Check if current user is admin (josejr.corp@gmail.com)
+  // Check if current user is admin (josejr.corp@gmail.com) or org owner
   const isAdmin = useMemo(() => {
+    if (currentUser) {
+      return currentUser.role === Role.OWNER || currentUser.role === Role.ORG_OWNER;
+    }
+    // Fallback to old check for backward compatibility
     return currentStudent?.ParentEmail?.toLowerCase() === 'josejr.corp@gmail.com';
-  }, [currentStudent]);
+  }, [currentUser, currentStudent]);
 
   // Auto-login from localStorage on component mount
   useEffect(() => {
+    const savedUser = localStorage.getItem('currentUser');
     const savedStudent = localStorage.getItem('currentStudent');
-    if (savedStudent) {
+
+    if (savedUser) {
+      try {
+        const user = JSON.parse(savedUser);
+        setCurrentUser(user);
+        setIsAuthenticated(true);
+
+        // Also restore currentStudent if available (for parent/student role)
+        if (savedStudent) {
+          const student = JSON.parse(savedStudent);
+          setCurrentStudent(student);
+        }
+      } catch (error) {
+        console.error('Failed to restore session:', error);
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('currentStudent');
+      }
+    } else if (savedStudent) {
+      // Legacy: if only currentStudent exists, try to re-authenticate
       try {
         const student = JSON.parse(savedStudent);
         setCurrentStudent(student);
         setIsAuthenticated(true);
+        // Will re-authenticate properly once data is loaded
       } catch (error) {
         console.error('Failed to restore session:', error);
         localStorage.removeItem('currentStudent');
