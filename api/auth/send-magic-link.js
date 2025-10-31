@@ -43,52 +43,120 @@ export default async function handler(req, res) {
 
     const cleanEmail = email.toLowerCase().trim();
 
-    // Fetch students from Google Sheets
-    const sheetsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${process.env.REACT_APP_GOOGLE_SHEET_ID}/values/Students!A2:K1000?key=${process.env.REACT_APP_GOOGLE_API_KEY}`;
-
-    const sheetsResponse = await fetch(sheetsUrl);
-
-    if (!sheetsResponse.ok) {
-      console.error('Google Sheets API error:', sheetsResponse.status);
-      return res.status(500).json({
-        success: false,
-        error: 'Failed to fetch student data'
-      });
+    // Priority 1: Check if email is owner (hardcoded)
+    if (cleanEmail === 'josejr.corp@gmail.com') {
+      // Owner always gets access
+      const isOwner = true;
+      const userName = 'Owner';
+      const userRole = 'OWNER';
+    } else {
+      var isOwner = false;
     }
 
-    const sheetsData = await sheetsResponse.json();
+    // Priority 2: Check Programs sheet for coaches/directors
+    let userFound = isOwner;
+    let userName = isOwner ? 'Owner' : '';
+    let userRole = isOwner ? 'OWNER' : '';
 
-    if (!sheetsData.values || sheetsData.values.length === 0) {
-      return res.status(500).json({
-        success: false,
-        error: 'No student data found'
-      });
+    if (!userFound) {
+      const programsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${process.env.REACT_APP_GOOGLE_SHEET_ID}/values/Programs!A2:S1000?key=${process.env.REACT_APP_GOOGLE_API_KEY}`;
+      const programsResponse = await fetch(programsUrl);
+
+      if (programsResponse.ok) {
+        const programsData = await programsResponse.json();
+        if (programsData.values && programsData.values.length > 0) {
+          // Check each row for the email in coach/director columns
+          for (const row of programsData.values) {
+            const coach1Email = row[3] ? row[3].toLowerCase().trim() : '';
+            const coach2Email = row[4] ? row[4].toLowerCase().trim() : '';
+            const coach3Email = row[5] ? row[5].toLowerCase().trim() : '';
+            const coach4Email = row[6] ? row[6].toLowerCase().trim() : '';
+            const director1Email = row[7] ? row[7].toLowerCase().trim() : '';
+            const director2Email = row[8] ? row[8].toLowerCase().trim() : '';
+            const director3Email = row[9] ? row[9].toLowerCase().trim() : '';
+            const orgDirectorEmail = row[17] ? row[17].toLowerCase().trim() : '';
+
+            // Check if email matches any coach/director column
+            if (cleanEmail === orgDirectorEmail) {
+              userFound = true;
+              userName = row[18] || 'Organization Director';
+              userRole = 'ORG_OWNER';
+              break;
+            } else if ([director1Email, director2Email, director3Email].includes(cleanEmail)) {
+              userFound = true;
+              if (cleanEmail === director1Email) userName = row[14] || 'Program Director';
+              else if (cleanEmail === director2Email) userName = row[15] || 'Program Director';
+              else if (cleanEmail === director3Email) userName = row[16] || 'Program Director';
+              userRole = 'PROGRAM_DIRECTOR';
+              break;
+            } else if ([coach1Email, coach2Email, coach3Email, coach4Email].includes(cleanEmail)) {
+              userFound = true;
+              if (cleanEmail === coach1Email) userName = row[10] || 'Coach';
+              else if (cleanEmail === coach2Email) userName = row[11] || 'Coach';
+              else if (cleanEmail === coach3Email) userName = row[12] || 'Coach';
+              else if (cleanEmail === coach4Email) userName = row[13] || 'Coach';
+              userRole = 'HEAD_COACH';
+              break;
+            }
+          }
+        }
+      }
     }
 
-    // Parse students data
-    const students = sheetsData.values.map(row => ({
-      StudentID: row[0] || '',
-      FirstName: row[1] || '',
-      LastName: row[2] || '',
-      Team: row[3] || '',
-      Goal_$: parseFloat(row[4]) || 0,
-      ParentEmail: row[5] || '',
-      PersonalLink: row[6] || '',
-      QR_URL: row[7] || '',
-      Avatar_URL: row[8] || '',
-      Program: row[9] || '',
-      QR_Link: row[10] || ''
-    }));
+    // Priority 3: Check Students sheet for parents
+    if (!userFound) {
+      const sheetsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${process.env.REACT_APP_GOOGLE_SHEET_ID}/values/Students!A2:M1000?key=${process.env.REACT_APP_GOOGLE_API_KEY}`;
+      const sheetsResponse = await fetch(sheetsUrl);
 
-    // Check if email exists
-    const student = students.find(s =>
-      s.ParentEmail.toLowerCase().trim() === cleanEmail
-    );
+      if (!sheetsResponse.ok) {
+        console.error('Google Sheets API error:', sheetsResponse.status);
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to fetch student data'
+        });
+      }
 
-    if (!student) {
+      const sheetsData = await sheetsResponse.json();
+
+      if (!sheetsData.values || sheetsData.values.length === 0) {
+        return res.status(500).json({
+          success: false,
+          error: 'No student data found'
+        });
+      }
+
+      // Parse students data
+      const students = sheetsData.values.map(row => ({
+        StudentID: row[0] || '',
+        FirstName: row[1] || '',
+        LastName: row[2] || '',
+        Team: row[3] || '',
+        Goal_$: parseFloat(row[4]) || 0,
+        ParentEmail: row[5] || '',
+        PersonalLink: row[6] || '',
+        QR_URL: row[7] || '',
+        Avatar_URL: row[8] || '',
+        Program: row[9] || '',
+        QR_Link: row[10] || ''
+      }));
+
+      // Check if email exists in Students sheet
+      const student = students.find(s =>
+        s.ParentEmail && s.ParentEmail.toLowerCase().trim() === cleanEmail
+      );
+
+      if (student) {
+        userFound = true;
+        userName = `${student.FirstName} ${student.LastName}`;
+        userRole = 'PARENT_STUDENT';
+      }
+    }
+
+    // If user not found anywhere, return error
+    if (!userFound) {
       return res.status(404).json({
         success: false,
-        error: 'Email not found. Please check your email address.'
+        error: 'Email not found. Please contact your coach or administrator.'
       });
     }
 
@@ -131,10 +199,10 @@ export default async function handler(req, res) {
           </div>
 
           <div style="background: white; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 10px 10px;">
-            <h2 style="color: #1f2937; margin-top: 0;">Hi ${student.FirstName}! 👋</h2>
+            <h2 style="color: #1f2937; margin-top: 0;">Hi ${userName}! 👋</h2>
 
             <p style="color: #4b5563; font-size: 16px;">
-              Click the button below to securely log in to your fundraising dashboard.
+              Click the button below to securely log in to your SportsRaiser dashboard.
             </p>
 
             <div style="text-align: center; margin: 30px 0;">
@@ -146,8 +214,7 @@ export default async function handler(req, res) {
 
             <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
               <p style="margin: 0; font-size: 14px; color: #6b7280;">
-                <strong>Team:</strong> ${student.Team}<br>
-                <strong>Program:</strong> ${student.Program}
+                <strong>Role:</strong> ${userRole === 'OWNER' ? 'Owner' : userRole === 'ORG_OWNER' ? 'Organization Director' : userRole === 'PROGRAM_DIRECTOR' ? 'Program Director' : userRole === 'HEAD_COACH' ? 'Head Coach' : 'Parent/Student'}
               </p>
             </div>
 
@@ -185,6 +252,8 @@ export default async function handler(req, res) {
     console.log('✅ Magic link sent:', {
       emailId: emailResult.data?.id,
       recipient: cleanEmail.replace(/(.{2})(.*)(@.*)/, '$1***$3'), // Mask email for privacy
+      userName: userName,
+      userRole: userRole,
       expiresIn: '15 minutes'
     });
 

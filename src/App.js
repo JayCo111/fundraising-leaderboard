@@ -424,10 +424,23 @@ const programsJson = await programsResponse.json();
   }, []);
 
   const enrichedStudents = useMemo(() => {
+    // Apply role-based filtering FIRST (if user is authenticated)
+    const filteredStudents = currentUser && currentUser.role
+      ? filterStudentsByRole(studentsData, currentUser)
+      : studentsData; // If not authenticated yet, show all (will be filtered after login)
+
+    const filteredOrders = currentUser && currentUser.role
+      ? filterOrdersByRole(ordersData, filteredStudents)
+      : ordersData;
+
+    const filteredReferrals = currentUser && currentUser.role
+      ? filterReferralsByRole(referralsData, filteredStudents, currentUser)
+      : referralsData;
+
     // Debug: Log unique StudentIDs in Orders vs Students
-    if (ordersData.length > 0 && studentsData.length > 0) {
-      const orderStudentIDs = [...new Set(ordersData.map(o => o.StudentID))];
-      const studentIDs = studentsData.map(s => s.StudentID);
+    if (filteredOrders.length > 0 && filteredStudents.length > 0) {
+      const orderStudentIDs = [...new Set(filteredOrders.map(o => o.StudentID))];
+      const studentIDs = filteredStudents.map(s => s.StudentID);
       const unmatchedOrders = orderStudentIDs.filter(id => !studentIDs.includes(id));
 
       if (unmatchedOrders.length > 0) {
@@ -436,20 +449,21 @@ const programsJson = await programsResponse.json();
       }
 
       console.log('📊 Data Summary:', {
-        totalStudents: studentsData.length,
-        totalOrders: ordersData.length,
+        totalStudents: filteredStudents.length,
+        totalOrders: filteredOrders.length,
         studentsWithOrders: studentIDs.filter(id => orderStudentIDs.includes(id)).length,
-        unmatchedOrderCount: unmatchedOrders.length
+        unmatchedOrderCount: unmatchedOrders.length,
+        userRole: currentUser?.role || 'not authenticated'
       });
     }
 
-    return studentsData.map(student => {
-      const studentOrders = ordersData?.filter(o => o.StudentID === student.StudentID) || [];
+    return filteredStudents.map(student => {
+      const studentOrders = filteredOrders?.filter(o => o.StudentID === student.StudentID) || [];
       const NetQty = studentOrders.reduce((sum, o) => sum + (o.Status === 'Refunded' ? 0 : o.Quantity), 0);
       const NetRaised = studentOrders.reduce((sum, o) => sum + (o.Status === 'Refunded' ? 0 : o.TotalPaid), 0);
       const ProgressPct = student.Goal_$ > 0 ? NetRaised / student.Goal_$ : 0;
       const FullName = `${student.FirstName} ${student.LastName}`;
-      const studentReferrals = referralsData?.filter(r => r.StudentID === student.StudentID) || [];
+      const studentReferrals = filteredReferrals?.filter(r => r.StudentID === student.StudentID) || [];
       const ReferralPoints = studentReferrals.reduce((sum, r) => sum + r.Points, 0);
 
       return {
@@ -464,7 +478,7 @@ const programsJson = await programsResponse.json();
         Rel_Referrals: studentReferrals
       };
     });
-  }, [studentsData, ordersData, referralsData]);
+  }, [studentsData, ordersData, referralsData, currentUser]);
 
   const rankedStudents = useMemo(() => {
     const sorted = [...enrichedStudents].sort((a, b) => b.NetRaised - a.NetRaised);
@@ -695,6 +709,27 @@ const programsJson = await programsResponse.json();
   // Show login page if not authenticated
   if (!isAuthenticated) {
     return <LoginPage onLogin={handleLogin} studentsData={studentsWithTeamStats} loading={loading} />;
+  }
+
+  // Route to appropriate dashboard based on user role
+  if (currentUser && currentUser.role) {
+    // Coaches, Directors, and Owners use DashboardRouter
+    if (currentUser.role === Role.HEAD_COACH ||
+        currentUser.role === Role.PROGRAM_DIRECTOR ||
+        currentUser.role === Role.ORG_OWNER ||
+        currentUser.role === Role.OWNER) {
+      return (
+        <DashboardRouter
+          user={currentUser}
+          studentsData={enrichedStudents}
+          ordersData={ordersData}
+          referralsData={referralsData}
+          programsData={programsData}
+          onLogout={handleLogout}
+        />
+      );
+    }
+    // Parent/Student role continues to use existing student portal below
   }
 
   return (
