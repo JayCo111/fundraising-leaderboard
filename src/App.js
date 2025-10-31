@@ -25,6 +25,7 @@ import EveryoneTab from './components/EveryoneTab';
 import ReferralsTab from './components/ReferralsTab';
 import DashboardDemo from './components/DashboardDemo';
 import DashboardRouter from './components/DashboardRouter';
+import DashboardSelector from './components/DashboardSelector';
 
 const FundraisingApp = () => {
   const [studentsData, setStudentsData] = useState([]);
@@ -39,6 +40,7 @@ const FundraisingApp = () => {
   const [activeTab, setActiveTab] = useState('mystats');
   const [showReferralForm, setShowReferralForm] = useState(false);
   const [showPlatformDemo, setShowPlatformDemo] = useState(false);
+  const [selectedDashboard, setSelectedDashboard] = useState(null); // 'leaderboard' or 'platform'
   
   // Referral form state
   const [referralFormData, setReferralFormData] = useState({
@@ -713,11 +715,41 @@ const programsJson = await programsResponse.json();
 
   // Route to appropriate dashboard based on user role
   if (currentUser && currentUser.role) {
-    // Coaches, Directors, and Owners use DashboardRouter
+    // OWNER gets dashboard selector
+    if (currentUser.role === Role.OWNER) {
+      // If no dashboard selected yet, show selector
+      if (!selectedDashboard) {
+        return (
+          <DashboardSelector
+            user={currentUser}
+            onSelectDashboard={(choice) => setSelectedDashboard(choice)}
+            onLogout={handleLogout}
+          />
+        );
+      }
+
+      // If platform selected, show DashboardRouter
+      if (selectedDashboard === 'platform') {
+        return (
+          <DashboardRouter
+            user={currentUser}
+            studentsData={enrichedStudents}
+            ordersData={ordersData}
+            referralsData={referralsData}
+            programsData={programsData}
+            onLogout={handleLogout}
+          />
+        );
+      }
+
+      // If leaderboard selected, continue to student portal below
+      // (fall through to render the leaderboard)
+    }
+
+    // Coaches, Directors, and Org Owners use DashboardRouter directly
     if (currentUser.role === Role.HEAD_COACH ||
         currentUser.role === Role.PROGRAM_DIRECTOR ||
-        currentUser.role === Role.ORG_OWNER ||
-        currentUser.role === Role.OWNER) {
+        currentUser.role === Role.ORG_OWNER) {
       return (
         <DashboardRouter
           user={currentUser}
@@ -745,6 +777,16 @@ const programsJson = await programsResponse.json();
               Signed in as: {currentStudent?.ParentEmail}
             </div>
             <div className="flex items-center gap-3">
+              {/* Switch Dashboard button - Owner Only */}
+              {currentUser?.role === Role.OWNER && (
+                <button
+                  onClick={() => setSelectedDashboard(null)}
+                  className="flex items-center gap-2 px-3 py-1 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg transition-all"
+                >
+                  <Building className="w-4 h-4" />
+                  Switch Dashboard
+                </button>
+              )}
               {/* Platform Demo button - Admin Only */}
               {isAdmin && (
                 <button
