@@ -1,11 +1,132 @@
 import { useState } from 'react';
 import { Role } from '../types';
 import DashboardRouter from './DashboardRouter';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, LogOut } from 'lucide-react';
 
-const DashboardDemo = ({ isAdmin = false, onBack = null }) => {
-  const [selectedRole, setSelectedRole] = useState(Role.SALES_REP);
+const DashboardDemo = ({ isAdmin = false, onBack = null, onLogout = null }) => {
+  const [selectedRole, setSelectedRole] = useState(null);
   const [showDemo, setShowDemo] = useState(false);
+
+  // Mock user data for different roles
+  const getMockUser = (role) => {
+    switch (role) {
+      case Role.OWNER:
+        return {
+          role: Role.OWNER,
+          name: 'Demo Owner',
+          email: 'owner@demo.com',
+          teams: [],
+          programs: [],
+          organizations: [],
+          permissions: ['all']
+        };
+      case Role.ORG_OWNER:
+        return {
+          role: Role.ORG_OWNER,
+          name: 'Demo Org Director',
+          email: 'orgdirector@demo.com',
+          teams: [],
+          programs: ['Demo Program 1', 'Demo Program 2'],
+          organizations: ['Demo Organization'],
+          permissions: ['view_org', 'edit_org', 'view_programs']
+        };
+      case Role.PROGRAM_DIRECTOR:
+        return {
+          role: Role.PROGRAM_DIRECTOR,
+          name: 'Demo Program Director',
+          email: 'programdirector@demo.com',
+          teams: [],
+          programs: ['Demo Program 1'],
+          organizations: [],
+          permissions: ['view_program', 'edit_program']
+        };
+      case Role.HEAD_COACH:
+        return {
+          role: Role.HEAD_COACH,
+          name: 'Demo Coach',
+          email: 'coach@demo.com',
+          teams: ['Demo Team A', 'Demo Team B'],
+          programs: ['Demo Program 1'],
+          organizations: [],
+          permissions: ['view_team', 'edit_team', 'upload_roster']
+        };
+      default:
+        return {
+          role,
+          name: 'Demo User',
+          email: 'user@demo.com',
+          teams: [],
+          programs: [],
+          organizations: [],
+          permissions: []
+        };
+    }
+  };
+
+  // Mock students data
+  const mockStudentsData = [
+    {
+      StudentID: 'DEMO_001',
+      FirstName: 'John',
+      LastName: 'Smith',
+      Team: 'Demo Team A',
+      Program: 'Demo Program 1',
+      Goal_$: 1000,
+      ParentEmail: 'parent1@demo.com',
+      CardsSold: 15,
+      NetRaised: 750,
+      OverallRank: 5,
+      RegisteredDate: new Date().toISOString(),
+      RegistrationStatus: 'REGISTERED'
+    },
+    {
+      StudentID: 'DEMO_002',
+      FirstName: 'Jane',
+      LastName: 'Doe',
+      Team: 'Demo Team A',
+      Program: 'Demo Program 1',
+      Goal_$: 1000,
+      ParentEmail: 'parent2@demo.com',
+      CardsSold: 20,
+      NetRaised: 1000,
+      OverallRank: 2,
+      RegisteredDate: new Date().toISOString(),
+      RegistrationStatus: 'REGISTERED'
+    },
+    {
+      StudentID: 'DEMO_003',
+      FirstName: 'Mike',
+      LastName: 'Johnson',
+      Team: 'Demo Team B',
+      Program: 'Demo Program 1',
+      Goal_$: 1000,
+      ParentEmail: 'parent3@demo.com',
+      CardsSold: 12,
+      NetRaised: 600,
+      OverallRank: 8,
+      RegisteredDate: new Date().toISOString(),
+      RegistrationStatus: 'REGISTERED'
+    }
+  ];
+
+  const mockOrdersData = [];
+  const mockReferralsData = [];
+  const mockProgramsData = [
+    {
+      Team: 'Demo Team A',
+      Program: 'Demo Program 1',
+      Organization: 'Demo Organization',
+      Coach1_Email: 'coach@demo.com',
+      Coach1_Name: 'Demo Coach'
+    },
+    {
+      Team: 'Demo Team B',
+      Program: 'Demo Program 1',
+      Organization: 'Demo Organization',
+      Coach1_Email: 'coach@demo.com',
+      Coach1_Name: 'Demo Coach'
+    }
+  ];
 
   const roleOptions = [
     { value: Role.OWNER, label: 'Owner', description: 'Full platform access' },
@@ -20,7 +141,9 @@ const DashboardDemo = ({ isAdmin = false, onBack = null }) => {
     { value: Role.PARENT_STUDENT, label: 'Student/Parent', description: 'Student portal (existing)' }
   ];
 
-  if (showDemo) {
+  if (showDemo && selectedRole) {
+    const mockUser = getMockUser(selectedRole);
+
     return (
       <div>
         <div className="bg-white shadow-lg border-b-2 border-cyan-200 p-4">
@@ -31,10 +154,14 @@ const DashboardDemo = ({ isAdmin = false, onBack = null }) => {
             </div>
             <div className="flex items-center gap-3">
               <button
-                onClick={() => setShowDemo(false)}
-                className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white font-semibold rounded-xl transition-colors"
+                onClick={() => {
+                  setShowDemo(false);
+                  setSelectedRole(null);
+                }}
+                className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white font-semibold rounded-xl transition-colors flex items-center gap-2"
               >
-                Back to Role Selection
+                <ArrowLeft className="w-4 h-4" />
+                Back to Roles
               </button>
               {onBack && (
                 <button
@@ -42,13 +169,32 @@ const DashboardDemo = ({ isAdmin = false, onBack = null }) => {
                   className="flex items-center gap-2 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold rounded-xl transition-colors"
                 >
                   <ArrowLeft className="w-4 h-4" />
-                  Back to Leaderboard
+                  Back to Selector
+                </button>
+              )}
+              {onLogout && (
+                <button
+                  onClick={onLogout}
+                  className="flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Logout
                 </button>
               )}
             </div>
           </div>
         </div>
-        <DashboardRouter />
+        <DashboardRouter
+          user={mockUser}
+          studentsData={mockStudentsData}
+          ordersData={mockOrdersData}
+          referralsData={mockReferralsData}
+          programsData={mockProgramsData}
+          onLogout={() => {
+            setShowDemo(false);
+            setSelectedRole(null);
+          }}
+        />
       </div>
     );
   }
