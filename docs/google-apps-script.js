@@ -31,6 +31,9 @@ function doPost(e) {
       case 'updateReferral':
         result = updateReferral(data.sheetId, data.referralId, data.data);
         break;
+      case 'bulkAddStudents':
+        result = bulkAddStudents(data.students);
+        break;
       default:
         throw new Error('Invalid action');
     }
@@ -241,6 +244,121 @@ function generateReferralId() {
   return `REF-${timestamp}-${random}`.toUpperCase();
 }
 
+/**
+ * Bulk add students to the Students sheet
+ * @param {Array} students - Array of student objects
+ * @returns {Object} Result object with success status and count
+ */
+function bulkAddStudents(students) {
+  try {
+    // Get the spreadsheet ID from Script Properties (you need to set this)
+    const sheetId = PropertiesService.getScriptProperties().getProperty('SHEET_ID');
+
+    if (!sheetId) {
+      throw new Error('SHEET_ID not configured in Script Properties');
+    }
+
+    const spreadsheet = SpreadsheetApp.openById(sheetId);
+    const studentsSheet = spreadsheet.getSheetByName('Students');
+
+    if (!studentsSheet) {
+      throw new Error('Students sheet not found');
+    }
+
+    // Get existing data to determine next StudentID numbers
+    const existingData = studentsSheet.getDataRange().getValues();
+    const studentIdCounts = {};
+
+    // Count existing students per team to generate unique IDs
+    for (let i = 1; i < existingData.length; i++) {
+      const existingId = existingData[i][0]; // StudentID in column A
+      if (existingId && typeof existingId === 'string') {
+        const parts = existingId.split('_');
+        if (parts.length === 2) {
+          const team = parts[0];
+          const num = parseInt(parts[1]);
+          if (!studentIdCounts[team] || num > studentIdCounts[team]) {
+            studentIdCounts[team] = num;
+          }
+        }
+      }
+    }
+
+    // Prepare rows to insert
+    const rowsToAdd = [];
+    const timestamp = new Date().toISOString();
+
+    students.forEach(student => {
+      // Generate StudentID: TEAM_INCREMENT (e.g., JADE_001)
+      const teamKey = student.team.toUpperCase().replace(/\s+/g, '');
+      if (!studentIdCounts[teamKey]) {
+        studentIdCounts[teamKey] = 0;
+      }
+      studentIdCounts[teamKey]++;
+      const studentId = `${teamKey}_${String(studentIdCounts[teamKey]).padStart(3, '0')}`;
+
+      // Generate PersonalLink (example format - adjust as needed)
+      const personalLink = `https://sportsraise.org/donate/${studentId}`;
+
+      // Prepare row data matching Students sheet columns A-M:
+      // A: StudentID, B: FirstName, C: LastName, D: Team, E: Goal_$, F: ParentEmail,
+      // G: PersonalLink, H: QR_URL, I: Avatar_URL, J: Program, K: QR_Link,
+      // L: RegisteredDate, M: RegistrationStatus
+      const rowData = [
+        studentId,                                    // A: StudentID
+        student.firstName,                            // B: FirstName
+        student.lastName,                             // C: LastName
+        student.team,                                 // D: Team
+        student.goal || 500,                          // E: Goal_$ (default $500)
+        student.parentEmail,                          // F: ParentEmail
+        personalLink,                                 // G: PersonalLink
+        '',                                           // H: QR_URL (leave empty for now)
+        '',                                           // I: Avatar_URL (leave empty)
+        student.program,                              // J: Program
+        '',                                           // K: QR_Link (can be generated later)
+        timestamp,                                    // L: RegisteredDate
+        'PENDING'                                     // M: RegistrationStatus (PENDING until parent logs in)
+      ];
+
+      rowsToAdd.push(rowData);
+    });
+
+    // Batch insert all rows at once (more efficient than individual appends)
+    if (rowsToAdd.length > 0) {
+      const startRow = studentsSheet.getLastRow() + 1;
+      const range = studentsSheet.getRange(startRow, 1, rowsToAdd.length, rowsToAdd[0].length);
+      range.setValues(rowsToAdd);
+    }
+
+    return ContentService
+      .createTextOutput(JSON.stringify({
+        success: true,
+        count: rowsToAdd.length,
+        message: `Successfully added ${rowsToAdd.length} students`
+      }))
+      .setMimeType(ContentService.MimeType.JSON);
+
+  } catch (error) {
+    console.error('Error in bulkAddStudents:', error);
+    return ContentService
+      .createTextOutput(JSON.stringify({
+        success: false,
+        error: error.message
+      }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+/**
+ * Helper function to set the Sheet ID in Script Properties
+ * Run this once from the Script Editor to configure your sheet ID
+ */
+function setSheetId() {
+  const sheetId = 'YOUR_GOOGLE_SHEET_ID_HERE'; // Replace with your actual Sheet ID
+  PropertiesService.getScriptProperties().setProperty('SHEET_ID', sheetId);
+  console.log('Sheet ID configured successfully');
+}
+
 // Test function to verify the script works
 function testAddReferral() {
   const testData = {
@@ -252,7 +370,45 @@ function testAddReferral() {
     stage: 'Contacted',
     points: 10
   };
-  
+
   const result = addReferral('YOUR_SHEET_ID_HERE', testData);
   console.log('Test result:', result);
+}
+
+/**
+ * Test function for bulkAddStudents
+ * Run this from the Script Editor to test the functionality
+ */
+function testBulkAddStudents() {
+  const testStudents = [
+    {
+      firstName: 'John',
+      lastName: 'Smith',
+      studentEmail: 'john.smith@email.com',
+      studentPhone: '(555) 123-4567',
+      parentFirstName: 'Jane',
+      parentLastName: 'Smith',
+      parentEmail: 'jane.smith@email.com',
+      parentPhone: '(555) 123-4568',
+      goal: 500,
+      team: 'Jade',
+      program: 'IDOL Cheer'
+    },
+    {
+      firstName: 'Sarah',
+      lastName: 'Johnson',
+      studentEmail: 'sarah.j@email.com',
+      studentPhone: '(555) 234-5678',
+      parentFirstName: 'Mike',
+      parentLastName: 'Johnson',
+      parentEmail: 'mike.j@email.com',
+      parentPhone: '(555) 234-5679',
+      goal: 750,
+      team: 'Jade',
+      program: 'IDOL Cheer'
+    }
+  ];
+
+  const result = bulkAddStudents(testStudents);
+  console.log('Test result:', result.getContent());
 }
