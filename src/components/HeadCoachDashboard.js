@@ -14,10 +14,12 @@ import {
   UserPlus,
   MessageSquare,
   Heart,
-  Clock
+  Clock,
+  Upload
 } from 'lucide-react';
 import MessagingCenter from './MessagingCenter';
 import AdvancedReferralCRM from './AdvancedReferralCRM';
+import RosterUpload from './RosterUpload';
 
 const HeadCoachDashboard = ({ user, studentsData, ordersData, referralsData, programsData, onLogout }) => {
   // For multi-team coaches, default to first team
@@ -25,6 +27,7 @@ const HeadCoachDashboard = ({ user, studentsData, ordersData, referralsData, pro
   const [activeTab, setActiveTab] = useState('overview');
   const [dateRange, setDateRange] = useState('30d');
   const [showAddAthlete, setShowAddAthlete] = useState(false);
+  const [showRosterUpload, setShowRosterUpload] = useState(false);
 
   // Filter students by selected team (data already filtered by authService to only include coach's teams)
   const athletes = useMemo(() => {
@@ -377,14 +380,23 @@ const HeadCoachDashboard = ({ user, studentsData, ordersData, referralsData, pro
             {/* Athletes Management */}
             <div className="bg-white rounded-2xl shadow-xl p-6">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-bold text-gray-900">Team Roster</h3>
-                <button
-                  onClick={() => setShowAddAthlete(true)}
-                  className="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold rounded-xl transition-colors flex items-center gap-2"
-                >
-                  <UserPlus className="w-4 h-4" />
-                  Add Athlete
-                </button>
+                <h3 className="text-xl font-bold text-gray-900">Team Roster ({athletes.length} athletes)</h3>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setShowRosterUpload(true)}
+                    className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-semibold rounded-xl transition-colors flex items-center gap-2 shadow-lg"
+                  >
+                    <Upload className="w-4 h-4" />
+                    Upload Roster (CSV)
+                  </button>
+                  <button
+                    onClick={() => setShowAddAthlete(true)}
+                    className="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold rounded-xl transition-colors flex items-center gap-2"
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    Add Single Athlete
+                  </button>
+                </div>
               </div>
               <div className="space-y-4">
                 {athletes.map((athlete) => (
@@ -505,6 +517,19 @@ const HeadCoachDashboard = ({ user, studentsData, ordersData, referralsData, pro
           />
         )}
       </div>
+
+      {/* Roster Upload Modal */}
+      {showRosterUpload && (
+        <RosterUpload
+          team={selectedTeam}
+          program={currentProgram}
+          onClose={() => setShowRosterUpload(false)}
+          onUploadComplete={() => {
+            // Reload page data after successful upload
+            window.location.reload();
+          }}
+        />
+      )}
 
       {/* Add Athlete Modal */}
       {showAddAthlete && (
