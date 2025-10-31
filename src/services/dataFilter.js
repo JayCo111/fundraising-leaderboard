@@ -46,10 +46,16 @@ export function filterStudentsByRole(students, user) {
     );
   }
 
-  // Parents see only their own student
+  // Parents see all students in their program (for leaderboards and team comparison)
+  // They can see stats but not personal details like orders
   if (user.role === Role.PARENT_STUDENT) {
+    // Get the program from the parent's student
+    const parentStudent = students.find(s => s.StudentID === user.studentId);
+    if (!parentStudent) return [];
+
+    // Return all students in the same program
     return students.filter(student =>
-      student.StudentID === user.studentId
+      student.Program === parentStudent.Program
     );
   }
 
