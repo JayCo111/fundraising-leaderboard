@@ -8,7 +8,6 @@ import {
   Eye,
   BarChart3,
   Award,
-  RefreshCw,
   CheckCircle,
   AlertCircle,
   Star,
@@ -20,92 +19,46 @@ import {
 import MessagingCenter from './MessagingCenter';
 import AdvancedReferralCRM from './AdvancedReferralCRM';
 
-const HeadCoachDashboard = ({ userData, teamData }) => {
+const HeadCoachDashboard = ({ user, studentsData, ordersData, referralsData, programsData, onLogout }) => {
+  // For multi-team coaches, default to first team
+  const [selectedTeam, setSelectedTeam] = useState(user?.teams?.[0] || '');
   const [activeTab, setActiveTab] = useState('overview');
   const [dateRange, setDateRange] = useState('30d');
   const [showAddAthlete, setShowAddAthlete] = useState(false);
 
-  // Mock data for athletes and team performance
-  const mockAthletes = useMemo(() => [
-    {
-      id: 'athlete-1',
-      name: 'Sarah Johnson',
-      email: 'sarah.j@email.com',
-      phone: '(555) 123-4567',
-      position: 'Forward',
-      jerseyNumber: 10,
-      status: 'ACTIVE',
-      cardsSold: 45,
-      revenue: 2250,
-      goal: 2000,
-      participationRate: 1.0,
-      lastActivity: '2024-01-17',
-      parentEmail: 'parent1@email.com',
-      parentPhone: '(555) 123-4568',
-      achievements: ['Top Seller', 'Goal Achiever'],
-      teamRank: 1,
-      programRank: 3
-    },
-    {
-      id: 'athlete-2',
-      name: 'Mike Chen',
-      email: 'mike.c@email.com',
-      phone: '(555) 234-5678',
-      position: 'Midfielder',
-      jerseyNumber: 7,
-      status: 'ACTIVE',
-      cardsSold: 38,
-      revenue: 1900,
-      goal: 2000,
-      participationRate: 0.95,
-      lastActivity: '2024-01-16',
-      parentEmail: 'parent2@email.com',
-      parentPhone: '(555) 234-5679',
-      achievements: ['Consistent Performer'],
-      teamRank: 2,
-      programRank: 8
-    },
-    {
-      id: 'athlete-3',
-      name: 'Emma Davis',
-      email: 'emma.d@email.com',
-      phone: '(555) 345-6789',
-      position: 'Defender',
-      jerseyNumber: 4,
-      status: 'ACTIVE',
-      cardsSold: 32,
-      revenue: 1600,
-      goal: 2000,
-      participationRate: 0.8,
-      lastActivity: '2024-01-15',
-      parentEmail: 'parent3@email.com',
-      parentPhone: '(555) 345-6790',
-      achievements: [],
-      teamRank: 3,
-      programRank: 15
-    },
-    {
-      id: 'athlete-4',
-      name: 'Alex Rodriguez',
-      email: 'alex.r@email.com',
-      phone: '(555) 456-7890',
-      position: 'Goalkeeper',
-      jerseyNumber: 1,
-      status: 'INACTIVE',
-      cardsSold: 15,
-      revenue: 750,
-      goal: 2000,
-      participationRate: 0.3,
-      lastActivity: '2024-01-10',
-      parentEmail: 'parent4@email.com',
-      parentPhone: '(555) 456-7891',
-      achievements: [],
-      teamRank: 4,
-      programRank: 25
-    }
-  ], []);
+  // Filter students by selected team (data already filtered by authService to only include coach's teams)
+  const athletes = useMemo(() => {
+    if (!studentsData || !selectedTeam) return [];
 
-  const athletes = mockAthletes;
+    // Get students for selected team
+    const teamStudents = studentsData.filter(student => student.Team === selectedTeam);
+
+    // Sort by NetRaised descending for team ranking
+    const sortedStudents = [...teamStudents].sort((a, b) => (b.NetRaised || 0) - (a.NetRaised || 0));
+
+    // Add team rank
+    return sortedStudents.map((student, index) => ({
+      id: student.StudentID,
+      name: `${student.FirstName} ${student.LastName}`,
+      email: student.Email || '',
+      phone: student.Phone || '',
+      position: '', // Not in current schema
+      jerseyNumber: null, // Not in current schema
+      status: student.RegistrationStatus === 'REGISTERED' ? 'ACTIVE' : 'INACTIVE',
+      cardsSold: student.CardsSold || 0,
+      revenue: student.NetRaised || 0,
+      goal: student.Goal_$ || 0,
+      participationRate: student.CardsSold > 0 ? 1.0 : 0.0,
+      lastActivity: '', // Not in current schema
+      parentEmail: student.ParentEmail || '',
+      parentPhone: '', // Not in current schema
+      achievements: [],
+      teamRank: index + 1,
+      programRank: student.OverallRank || 0,
+      // Original student data for reference
+      student
+    }));
+  }, [studentsData, selectedTeam]);
 
   const teamStats = useMemo(() => {
     const activeAthletes = athletes.filter(a => a.status === 'ACTIVE');
@@ -127,48 +80,55 @@ const HeadCoachDashboard = ({ userData, teamData }) => {
     };
   }, [athletes]);
 
-  const peerTeams = useMemo(() => [
-    {
-      id: 'team-2',
-      name: 'Thunder',
-      coach: 'Coach Martinez',
-      athletes: 12,
-      revenue: 18500,
-      cardsSold: 370,
-      rank: 1,
-      medal: '🥇'
-    },
-    {
-      id: 'team-3',
-      name: 'Storm',
-      coach: 'Coach Wilson',
-      athletes: 11,
-      revenue: 16200,
-      cardsSold: 324,
-      rank: 2,
-      medal: '🥈'
-    },
-    {
-      id: 'team-1',
-      name: teamData?.name || 'Lightning',
-      coach: userData?.name || 'Coach Johnson',
-      athletes: teamStats.totalAthletes,
-      revenue: teamStats.totalRevenue,
-      cardsSold: teamStats.totalCardsSold,
-      rank: 3,
-      medal: '🥉'
-    },
-    {
-      id: 'team-4',
-      name: 'Blaze',
-      coach: 'Coach Brown',
-      athletes: 10,
-      revenue: 14200,
-      cardsSold: 284,
-      rank: 4,
-      medal: null
-    }
-  ], [teamStats, teamData, userData]);
+  // Get current team's program
+  const currentProgram = useMemo(() => {
+    if (!programsData || !selectedTeam) return '';
+    const teamProgram = programsData.find(p => p.Team === selectedTeam);
+    return teamProgram?.Program || '';
+  }, [programsData, selectedTeam]);
+
+  // Calculate team rankings within the same program
+  const peerTeams = useMemo(() => {
+    if (!studentsData || !currentProgram) return [];
+
+    // Get all teams in the same program
+    const programTeams = programsData
+      .filter(p => p.Program === currentProgram)
+      .map(p => p.Team);
+
+    // Calculate stats for each team
+    const teamStatsMap = {};
+    programTeams.forEach(team => {
+      const teamStudents = studentsData.filter(s => s.Team === team);
+      const totalRevenue = teamStudents.reduce((sum, s) => sum + (s.NetRaised || 0), 0);
+      const totalCards = teamStudents.reduce((sum, s) => sum + (s.CardsSold || 0), 0);
+
+      // Get coach name from Programs sheet
+      const programRow = programsData.find(p => p.Team === team);
+      const coachName = programRow?.Coach1_Name || 'Coach';
+
+      teamStatsMap[team] = {
+        id: team,
+        name: team,
+        coach: coachName,
+        athletes: teamStudents.length,
+        revenue: totalRevenue,
+        cardsSold: totalCards,
+        isMyTeam: team === selectedTeam
+      };
+    });
+
+    // Sort by revenue and assign ranks
+    const rankedTeams = Object.values(teamStatsMap)
+      .sort((a, b) => b.revenue - a.revenue)
+      .map((team, index) => ({
+        ...team,
+        rank: index + 1,
+        medal: index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : null
+      }));
+
+    return rankedTeams;
+  }, [studentsData, programsData, currentProgram, selectedTeam]);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -218,9 +178,24 @@ const HeadCoachDashboard = ({ userData, teamData }) => {
           <div className="flex items-center justify-between py-6">
             <div>
               <h1 className="text-3xl font-black text-gray-900">Head Coach Dashboard</h1>
-              <p className="text-lg text-gray-600 mt-1">{teamData?.name || 'Lightning'} Team Management</p>
+              <p className="text-lg text-gray-600 mt-1">
+                {user?.name || 'Coach'} - {currentProgram || 'Program'}
+              </p>
             </div>
             <div className="flex items-center gap-4">
+              {/* Team Selector for multi-team coaches */}
+              {user?.teams?.length > 1 && (
+                <select
+                  value={selectedTeam}
+                  onChange={(e) => setSelectedTeam(e.target.value)}
+                  className="px-4 py-2 border-2 border-emerald-300 rounded-xl font-semibold text-gray-700 focus:ring-2 focus:ring-emerald-500"
+                >
+                  {user.teams.map(team => (
+                    <option key={team} value={team}>{team}</option>
+                  ))}
+                </select>
+              )}
+              {/* Date Range Selector */}
               <select
                 value={dateRange}
                 onChange={(e) => setDateRange(e.target.value)}
@@ -231,12 +206,23 @@ const HeadCoachDashboard = ({ userData, teamData }) => {
                 <option value="90d">Last 90 Days</option>
                 <option value="1y">Last Year</option>
               </select>
-              <button className="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold rounded-xl transition-colors flex items-center gap-2">
-                <RefreshCw className="w-4 h-4" />
-                Refresh
+              <button
+                onClick={onLogout}
+                className="px-4 py-2 border-2 border-gray-300 hover:border-gray-400 text-gray-700 font-semibold rounded-xl transition-colors"
+              >
+                Logout
               </button>
             </div>
           </div>
+          {/* Team Name Badge */}
+          {selectedTeam && (
+            <div className="pb-4">
+              <span className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-cyan-50 to-blue-50 border-2 border-cyan-300 rounded-xl">
+                <Trophy className="w-5 h-5 text-cyan-600 mr-2" />
+                <span className="font-bold text-gray-900">{selectedTeam}</span>
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -318,7 +304,9 @@ const HeadCoachDashboard = ({ userData, teamData }) => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-black text-white mb-2 drop-shadow">Team Rank</p>
-                    <p className="text-3xl font-black text-white drop-shadow-lg">#{3}</p>
+                    <p className="text-3xl font-black text-white drop-shadow-lg">
+                      {peerTeams.find(t => t.isMyTeam)?.medal || `#${peerTeams.find(t => t.isMyTeam)?.rank || '-'}`}
+                    </p>
                   </div>
                   <Trophy className="w-8 h-8 text-white opacity-80" />
                 </div>
@@ -358,8 +346,8 @@ const HeadCoachDashboard = ({ userData, teamData }) => {
               <div className="space-y-4">
                 {peerTeams.map((team) => (
                   <div key={team.id} className={`border-2 rounded-xl p-4 transition-all ${
-                    team.id === 'team-1' 
-                      ? 'border-cyan-400 bg-cyan-50' 
+                    team.isMyTeam
+                      ? 'border-cyan-400 bg-cyan-50'
                       : 'border-gray-200 hover:border-cyan-300'
                   }`}>
                     <div className="flex items-center justify-between">
@@ -500,18 +488,20 @@ const HeadCoachDashboard = ({ userData, teamData }) => {
         )}
 
         {activeTab === 'referrals' && (
-          <AdvancedReferralCRM 
-            userRole="HEAD_COACH" 
-            userData={userData} 
-            userScope={{ team: teamData?.id }} 
+          <AdvancedReferralCRM
+            userRole="HEAD_COACH"
+            userData={user}
+            userScope={{ team: selectedTeam }}
+            referralsData={referralsData}
           />
         )}
 
         {activeTab === 'messaging' && (
-          <MessagingCenter 
-            userRole="HEAD_COACH" 
-            userData={userData} 
-            userScope={{ team: teamData?.id }} 
+          <MessagingCenter
+            userRole="HEAD_COACH"
+            userData={user}
+            userScope={{ team: selectedTeam }}
+            studentsData={studentsData}
           />
         )}
       </div>
