@@ -14,13 +14,18 @@ import {
   CheckCircle,
   AlertCircle,
   Clock,
-  Trophy
+  Trophy,
+  LogOut
 } from 'lucide-react';
 
-const ClubSchoolDirector = ({ userData, organizationData }) => {
+const ClubSchoolDirector = ({ user, studentsData, ordersData, referralsData, programsData, onLogout }) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [dateRange, setDateRange] = useState('30d');
   const [showAddProgram, setShowAddProgram] = useState(false);
+
+  // Use real user data (backward compatibility with old userData prop)
+  const currentUser = user;
+  const organizationData = { name: currentUser?.organizations?.[0] || 'Organization' };
 
   // Mock data for programs and campaigns
   const mockPrograms = useMemo(() => [
@@ -177,6 +182,15 @@ const ClubSchoolDirector = ({ userData, organizationData }) => {
                 <RefreshCw className="w-4 h-4" />
                 Refresh
               </button>
+              {onLogout && (
+                <button
+                  onClick={onLogout}
+                  className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl transition-colors flex items-center gap-2"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Logout
+                </button>
+              )}
             </div>
           </div>
         </div>
