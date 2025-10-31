@@ -728,16 +728,12 @@ const programsJson = await programsResponse.json();
         );
       }
 
-      // If platform selected, show DashboardRouter
+      // If platform selected, show DashboardDemo (full platform with all roles)
       if (selectedDashboard === 'platform') {
         return (
-          <DashboardRouter
-            user={currentUser}
-            studentsData={enrichedStudents}
-            ordersData={ordersData}
-            referralsData={referralsData}
-            programsData={programsData}
-            onLogout={handleLogout}
+          <DashboardDemo
+            isAdmin={true}
+            onBack={() => setSelectedDashboard(null)}
           />
         );
       }
